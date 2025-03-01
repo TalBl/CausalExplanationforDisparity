@@ -79,7 +79,10 @@ def write_pickle_files(d: Dataset):
     with open(f"data/{d.name}/causal_dag.txt", "r") as f:
         graph = f.readlines()
     for t in d.treatments_atts:
-        calc_causal_graph_per_treatment(df, graph, d, t)
+        try:
+            calc_causal_graph_per_treatment(df, graph, d, t)
+        except Exception as e:
+            print("fail")
 
 
 def GenChildren(d: Dataset):
@@ -93,12 +96,16 @@ def GenChildren(d: Dataset):
         treatments.extend(dev_type_atts)
     for att in d.treatments_atts:
         for val in df[att].dropna().unique():
+            if type(val) in [int, np.int64, np.float64] and val < 0:
+                continue
             children.append(((att, val),))
     return children
 
 
 def getTreatmentATE(df_group, causal_graph, treatments, outcome_col, p_value_param):
     df_group['TempTreatment'] = df_group.apply(lambda row: int(all(row[attr] == val for attr, val in treatments)), axis=1)
+    if df_group.loc[df_group['TempTreatment'] == 1].shape[0] < 50:
+        return None
     try:
         model = CausalModel(
             data=df_group,
@@ -135,7 +142,7 @@ def calc_dag(lines):
     return causal_graph
 
 
-def ComputeCATEnFilter(treats, d: Dataset, dag, depth, dict_res: dict, df_group1, df_group2, p_value):
+def ComputeCATEnFilter(treats: set, d: Dataset, dag, depth, dict_res: dict, df_group1, df_group2, p_value):
     # check if all his parents exists -> calc CATE -> if exists + pass p_val
     # -> check if sign of iscore equal the sign diff avg
     try:
@@ -155,33 +162,16 @@ def ComputeCATEnFilter(treats, d: Dataset, dag, depth, dict_res: dict, df_group1
         ate_group1 = getTreatmentATE(df_group1, dag, treats, d.outcome_col, p_value)
         ate_group2 = getTreatmentATE(df_group2, dag, treats, d.outcome_col, p_value)
         if ate_group1 and ate_group2: # pass p_value checks
-            cate = abs(ate_group1 - ate_group2)
+            iscore = abs(ate_group1 - ate_group2)
             if d.can_ignore_treatments_filter:
-                if d.need_filter_treatments:
-                    if d.func_filter_treats(ate_group1, ate_group2):
-                        return cate, ate_group1, ate_group2
-                    else:
-                        return None
+                return iscore, ate_group1, ate_group2
+            if d.need_filter_treatments:
+                if d.func_filter_treats(ate_group1, ate_group2):
+                    logger.critical("Found Treatment")
+                    return iscore, ate_group1, ate_group2, p_value
                 else:
-                    return cate, ate_group1, ate_group2
-            if d.is_avg_diff_positive and ate_group1 - ate_group2 > 0:
-                if d.need_filter_treatments:
-                    if d.func_filter_treats(ate_group1, ate_group2):
-                        logger.critical("Found Treatment")
-                        return cate, ate_group1, ate_group2, p_value
-                    else:
-                        return None
-                return cate, ate_group1, ate_group2, p_value
-            if (not d.is_avg_diff_positive) and ate_group1 - ate_group2 < 0:
-                if d.need_filter_treatments:
-                    if d.func_filter_treats(ate_group1, ate_group2):
-                        logger.critical("Found Treatment")
-                        return cate, ate_group1, ate_group2, p_value
-                    else:
-                        return None
-                return cate, ate_group1, ate_group2, p_value
-        else:
-            return None
+                    return None
+            return iscore, ate_group1, ate_group2, p_value
     except Exception as e:
         print(e)
 
@@ -222,6 +212,7 @@ def get_subpopulation(df, s):
 
 
 def findBestTreatment(subpopulation_str, d: Dataset, dag, p_value):
+    max_workers = 100 if d.name == "acs" else None
     df = pd.read_csv(d.clean_path)
     if subpopulation_str != "":
         subpopulation = get_subpopulation(df, subpopulation_str)
@@ -252,10 +243,14 @@ def findBestTreatment(subpopulation_str, d: Dataset, dag, p_value):
         candidates = GenChildrenNextLevel(dict_res, depth)
 
         # Step 5: Compute CATE and filter candidates for the next level.
-        for i in candidates:
-            r = ComputeCATEnFilter(i, d.copy(), dag, depth, dict_res, df_group1.copy(), df_group2.copy(), p_value)
-            if r:
-                dict_res[depth][i] = r
+        try:
+            for i in candidates:
+                r = ComputeCATEnFilter(i, d.copy(), dag, depth,
+                                       dict_res, df_group1.copy(), df_group2.copy(), p_value)
+                if r:
+                    dict_res[depth][i] = r
+        except Exception as e:
+            print(e)
         # Step 6: Find the top treatment for the current level.
         top_treatment = GetTopTreatment(dict_res[depth])
         if top_treatment and top_treatment[1][0] > max_treatment[1][0]:  # Compare CATE scores.
@@ -266,14 +261,14 @@ def findBestTreatment(subpopulation_str, d: Dataset, dag, p_value):
 
 
 def run_subpopulations(d):
+    max_workers = 10 if d.name == "acs" else None
+    p_value_threshold = 0.05 if d.name != "meps" else 0.1
     subpopulations = list(pd.read_csv(f"outputs/{d.name}/interesting_subpopulations.csv")['itemset'])
     results = {}
     with open(f"data/{d.name}/causal_dag.txt", "r") as f:
         dag = f.readlines()
     for s in subpopulations:
-        r = findBestTreatment(s, d.copy(), dag, 0.25)
-        if r:
-            results[s] = r
+        results[s] = findBestTreatment(s, d.copy(), dag, p_value_threshold)
         logger.critical("finish population")
     return results
 

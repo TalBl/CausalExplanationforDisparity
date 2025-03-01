@@ -499,7 +499,7 @@ class FairnessDebuggingUsingMachineUnlearning():
                                          "Accuracy", "GT_Accuracy", "timeElapsedToTrain", 
                                          "timeElapsedToDelete", "Parity_Reduction", "Accuracy_Reduction"])
         for index, subset in enumerate(validSubsetsInfo):
-            parityReduction = (abs(self.getDatasetFairnessParity()) - abs(subset["parity"])) * 100 / abs(self.getDatasetFairnessParity())
+            parityReduction = (abs(self.getDatasetFairnessParity()) - abs(subset["parity"])) * 100 / abs(self.getDatasetFairnessParity() + (1e-6))
             accReduction = (abs(self.dataAccuracy) - abs(subset["accuracy"])) * 100 / abs(self.dataAccuracy)
             newResultEntry = [str(subset["subset"]),
                               str(subset["size"]),

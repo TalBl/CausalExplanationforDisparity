@@ -10,14 +10,13 @@ from algorithms.final_algorithm.new_greedy import get_intersection, ni_score
 from algorithms.final_algorithm.find_treatment_new import findBestTreatment, get_subpopulation
 from algorithms.debug_RF.DebugRF import Dataset_RF, FairnessMetric, FairnessDebuggingUsingMachineUnlearning
 from algorithms.final_algorithm.find_treatment_new import changeDAG, getTreatmentATE
-from Cleaning_Datasets.clean_acs import filter_subs as acs_filter_subs, filter_treats as acs_filter_treats
-from Cleaning_Datasets.clean_so import filter_facts as so_filter_facts
-from Cleaning_Datasets.clean_meps import filter_facts as meps_filter_facts
+from cleaning_datasets.clean_acs import filter_subs as acs_filter_subs, filter_treats as acs_filter_treats
+from cleaning_datasets.clean_so import filter_facts as so_filter_facts
+from cleaning_datasets.clean_meps import filter_facts as meps_filter_facts
 from Utils import Dataset, choose_lamda
 import itertools
 
 THRESHOLD_SUPPORT = 0.05
-# LAMDA = 0.0001
 ALPHA = 0.65
 K = 5
 
@@ -48,45 +47,11 @@ class SODataset(Dataset_RF):
         df['Age'] = df['Age'].map({'Under 18 years old': 0,'18 - 24 years old': 1, '25 - 34 years old': 2,
                                    '35 - 44 years old': 3, '45 - 54 years old': 4, '55 - 64 years old': 5,
                                    '65 years or older': 6}).astype(int, errors='ignore')
-        df['Country'] = df['Country'].map({'Latvia': 0, 'Viet Nam': 1, 'Turkey': 2, 'Peru': 3, 'Bangladesh': 4, 'Iraq': 5,
-                                           'Myanmar': 6, 'Estonia': 7, 'France': 8, 'Philippines': 9, 'Chile': 10,
-                                           'Libyan Arab Jamahiriya': 11, 'The former Yugoslav Republic of Macedonia': 12,
-                                           'Ecuador': 13, 'Canada': 14, 'Colombia': 15, 'Gambia': 16, 'Croatia': 17,
-                                           'Luxembourg': 18, 'Brazil': 19, 'Portugal': 20, 'Uganda': 21, 'Indonesia': 22,
-                                           'Ireland': 23, 'Japan': 24, 'Nicaragua': 25, 'Afghanistan': 26, 'Mongolia': 27,
-                                           'Nigeria': 28, 'Slovenia': 29, 'Tunisia': 30, 'Russian Federation': 31,
-                                           'Republic of Moldova': 32, 'Jordan': 33, 'Armenia': 34, 'Saudi Arabia': 35,
-                                           'United Republic of Tanzania': 36, 'Argentina': 37, 'Malaysia': 38,
-                                           'Venezuela, Bolivarian Republic of...': 39, 'Spain': 40, 'United Arab Emirates': 41,
-                                           'Singapore': 42, 'Congo, Republic of the...': 43, 'Niger': 44, 'Botswana': 45,
-                                           'Democratic Republic of the Congo': 46, 'Italy': 47, 'Andorra': 48, 'Finland': 49,
-                                           'Algeria': 50, 'Lebanon': 51, 'Kyrgyzstan': 52, 'Cyprus': 53, 'Kenya': 54,
-                                           'Cameroon': 55, 'Paraguay': 56, 'Hungary': 57, 'Denmark': 58, 'Senegal': 59,
-                                           'Mauritius': 60, 'Republic of Korea': 61, 'Bulgaria': 62, 'Sweden': 63,
-                                           'Netherlands': 64, 'United States': 65, 'Hong Kong (S.A.R.)': 66, 'Ghana': 67,
-                                           'Costa Rica': 68, 'Uruguay': 69, 'Bahamas': 70, 'Egypt': 71, 'Romania': 72,
-                                           'Lesotho': 73, 'Mexico': 74, 'Bolivia': 75, 'Malta': 76, 'Bosnia and Herzegovina': 77,
-                                           'South Africa': 78, 'China': 79, 'Poland': 80, 'India': 81, 'Kazakhstan': 82,
-                                           'Bahrain': 83, 'Czech Republic': 84, 'Azerbaijan': 85, 'Serbia': 86, 'El Salvador': 87,
-                                           'Iceland': 88, 'Maldives': 89, 'Cuba': 90, 'Other Country (Not Listed Above)': 91,
-                                           'Saint Lucia': 92, 'Montenegro': 93, 'United Kingdom': 94, 'Tajikistan': 95, 'Benin': 96,
-                                           'Greece': 97, 'Ukraine': 98, 'Barbados': 99, 'Trinidad and Tobago': 100, 'New Zealand': 101,
-                                           'Nepal': 102, 'Dominican Republic': 103, 'Yemen': 104, 'Iran, Islamic Republic of...': 105,
-                                           'Somalia': 106, 'Haiti': 107, 'Sri Lanka': 108, 'Morocco': 109, 'Australia': 110,
-                                           'Belarus': 111, 'Slovakia': 112, 'Ethiopia': 113, 'Norway': 114, 'Kuwait': 115,
-                                           'Togo': 116, 'Albania': 117, 'Malawi': 118, 'Bhutan': 119, 'Sierra Leone': 120,
-                                           'Uzbekistan': 121, 'Zimbabwe': 122, 'Guatemala': 123, 'Fiji': 124, 'Oman': 125,
-                                           'Switzerland': 126, 'Rwanda': 127, 'Austria': 128, 'Cambodia': 129,
-                                           'South Korea': 130, 'Turkmenistan': 131, 'Lithuania': 132, 'Jamaica': 133,
-                                           'Taiwan': 134, 'Liechtenstein': 135, 'Sudan': 136, 'Syrian Arab Republic': 137,
-                                           'Honduras': 138, 'Qatar': 139, 'Madagascar': 140, 'Thailand': 141,
-                                           "Côte d'Ivoire": 142, 'Belgium': 143, 'Namibia': 144, 'Panama': 145, 'Mozambique': 146,
-                                           'Israel': 147, 'Guyana': 148, 'Georgia': 149, 'Germany': 150, 'Pakistan': 151, 'Burundi': 152}).astype(int, errors='ignore')
-        df['ConvertedCompYearly'] = df['ConvertedCompYearly'].apply(lambda x : 1 if x > 10000 else 0)
+        df['ConvertedSalary'] = df['ConvertedSalary'].apply(lambda x : 1 if x > 20000 else 0)
         '''Moving outcome column at the end'''
         cols = list(df.columns.values)
-        cols.pop(cols.index('ConvertedCompYearly'))
-        df = df[cols+['ConvertedCompYearly']]
+        cols.pop(cols.index('ConvertedSalary'))
+        df = df[cols+['ConvertedSalary']]
         return df
 
     def __preprocessDatasetForCategorization(self, dataset):
@@ -94,7 +59,7 @@ class SODataset(Dataset_RF):
         non_object_columns = [col for col in df.columns if df[col].dtypes != 'object']
         quantiles = self.train[non_object_columns].quantile([0, .25, .5, .75, 1.0], axis = 0)
         for col in non_object_columns:
-            if col == 'ConvertedCompYearly' or col == "TempTreatment":
+            if col == 'ConvertedSalary' or col == "TempTreatment":
                 continue
             else:
                 df[col] = pd.cut(df[col],
@@ -102,11 +67,11 @@ class SODataset(Dataset_RF):
                                  labels=[str(col) + ' = low', str(col) + ' = high'],
                                  right=True,
                                  include_lowest=True)
-        df['ConvertedCompYearly'] = df['ConvertedCompYearly'].apply(lambda x : 1 if x > 10000 else 0).astype(int, errors='ignore')
+        df['ConvertedSalary'] = df['ConvertedSalary'].apply(lambda x : 1 if x > 10000 else 0).astype(int, errors='ignore')
         '''Moving outcome column at the end'''
         cols = list(df.columns.values)
-        cols.pop(cols.index('ConvertedCompYearly'))
-        df = df[cols+['ConvertedCompYearly']]
+        cols.pop(cols.index('ConvertedSalary'))
+        df = df[cols+['ConvertedSalary']]
         return df
 
     def __decodeAttributeCodeToRealValues(self, dataset):
@@ -142,15 +107,14 @@ class MEPSDataset(Dataset_RF):
         df = copy.deepcopy(dataset)
         df['MaritalStatus'] = df['MaritalStatus'].map({'Married': 0, 'Divorced': 1, 'Widowed': 2, 'Separated': 3,
                                                        'NeverMarried': 4}).astype(int, errors='ignore')
-        df['Region'] = df['Region'].map({'West': 0, 'Midwest': 1, 'South': 2, 'Northeast': 3}).astype(int, errors='ignore')
+        df['Region'] = df['Region'].map({'West': 0, 'Midwest': 1, 'South': 2, 'Northeast': 3, "-1": -1}).astype(int, errors='ignore')
         df['Race'] = df['Race'].map({'White': 0, 'Black': 1, 'MultipleRaces': 2, ' Indian/Alaska': 3, 'Asian/Hawaiian/PacificIls': 4}).astype(int, errors='ignore')
-        df['Education'] = df['Education'].map({'Bachelor': 0, 'Other': 1, 'UnAcceptable': 2, 'High school': 3, 'No degree': 4, 'Master': 5, 'Doctorate': 6, 'GED': 7}).astype(int, errors='ignore')
-        df['IsWorking'] = df['IsWorking'].map({'UnAcceptable': 0, 'WorkedAtSomePointDuringTheYear': 1, 'NotCurrentlyWorkingButHasAJob': 2, 'ActivelyWorking': 3, 'NotEmployed': 4}).astype(int, errors='ignore')
-        df['IsDiagnosedDiabetes'] = df['IsDiagnosedDiabetes'].astype(int, errors='ignore')
+        df['IsWorking'] = df['IsWorking'].map({'UnAcceptable': 0, 'WorkedAtSomePointDuringTheYear': 1, 'NotCurrentlyWorkingButHasAJob': 2, 'ActivelyWorking': 3, 'NotEmployed': 4, "-1": -1}).astype(int, errors='ignore')
+        df['FeltNervous'] = df['FeltNervous'].astype(int, errors='ignore')
         '''Moving outcome column at the end'''
         cols = list(df.columns.values)
-        cols.pop(cols.index('IsDiagnosedDiabetes'))
-        df = df[cols+['IsDiagnosedDiabetes']]
+        cols.pop(cols.index('FeltNervous'))
+        df = df[cols+['FeltNervous']]
         return df
 
     def __preprocessDatasetForCategorization(self, dataset):
@@ -158,7 +122,7 @@ class MEPSDataset(Dataset_RF):
         non_object_columns = [col for col in df.columns if df[col].dtypes != 'object']
         quantiles = self.train[non_object_columns].quantile([0, .25, .5, .75, 1.0], axis = 0)
         for col in non_object_columns:
-            if col == 'IsDiagnosedDiabetes' or col == "TempTreatment":
+            if col == 'FeltNervous' or col == "TempTreatment":
                 continue
             else:
                 df[col] = pd.cut(df[col],
@@ -166,11 +130,11 @@ class MEPSDataset(Dataset_RF):
                                  labels=[str(col) + ' = low', str(col) + ' = high'],
                                  right=True,
                                  include_lowest=True)
-        df['IsDiagnosedDiabetes'] = df['IsDiagnosedDiabetes'].astype(int, errors='ignore')
+        df['FeltNervous'] = df['FeltNervous'].astype(int, errors='ignore')
         '''Moving outcome column at the end'''
         cols = list(df.columns.values)
-        cols.pop(cols.index('IsDiagnosedDiabetes'))
-        df = df[cols+['IsDiagnosedDiabetes']]
+        cols.pop(cols.index('FeltNervous'))
+        df = df[cols+['FeltNervous']]
         return df
 
     def __decodeAttributeCodeToRealValues(self, dataset):
@@ -207,13 +171,13 @@ class ACSDataset(Dataset_RF):
         df['Sex'] = df['Sex'].map({'Man': 0, "Woman": 1}).astype(int, errors='ignore')
         df['Age'] = df['Age'].map({'<17.00': 0, "17.00-34.00": 1, "34.00-50.00": 2, "50.00-64.00": 3, ">64.00": 4}).astype(int, errors='ignore')
         df['With a disability'] = df['With a disability'].map({'no': 0, "yes": 1}).astype(int, errors='ignore')
-        df['School enrollment'] = df['School enrollment'].map({'No, has not attended in the last 3 months': 0, 'Yes, private school, private college, or home school': 1,
-                                                       'Yes, public school or public college': 2}).astype(int, errors='ignore')
-        df['Cognitive difficulty'] = df['Cognitive difficulty'].map({'no': 0, "yes": 1}).astype(int, errors='ignore')
-        df['Language other than English spoken at home'] = df['Language other than English spoken at home'].map({'no': 0, "yes": 1}).astype(int, errors='ignore')
-        df['Citizenship status'] = df['Citizenship status'].map({'Born abroad of American parent(s)': 0, 'Born in Puerto Rico, Guam, the U.S. Virgin Islands, or the Northern Marianas': 1,
-                                                               'Born in the U.S.': 2, 'Not a citizen of the U.S.': 3,
-                                                                 'U.S. citizen by naturalization': 4}).astype(int, errors='ignore')
+        # df['School enrollment'] = df['School enrollment'].map({'No, has not attended in the last 3 months': 0, 'Yes, private school, private college, or home school': 1,
+        #                                                'Yes, public school or public college': 2}).astype(int, errors='ignore')
+        #df['Language other than English spoken at home'] = df['Language other than English spoken at home'].map({'no': 0, "yes": 1}).astype(int, errors='ignore')
+        #df['Hearing difficulty'] = df['Percent of poverty status'].map({'no': 0, "yes": 1}).astype(int, errors='ignore')
+        # df['Citizenship status'] = df['Citizenship status'].map({'Born abroad of American parent(s)': 0, 'Born in Puerto Rico, Guam, the U.S. Virgin Islands, or the Northern Marianas': 1,
+        #                                                        'Born in the U.S.': 2, 'Not a citizen of the U.S.': 3,
+        #                                                          'U.S. citizen by naturalization': 4}).astype(int, errors='ignore')
         df['Region'] = df['Region'].map({'West': 0, 'Midwest': 1, 'South': 2, 'Northeast': 3}).astype(int, errors='ignore')
         """df['state code'] = df['state code'].map({'California': 0, 'Florida': 1, 'Illinois': 2, ' New York': 3, 'Ohio': 4,
                                                  'Pennsylvania': 5, 'Texas': 6}).astype(int, errors='ignore')
@@ -294,26 +258,31 @@ def CalcIScore(treats: set, d: Dataset, dag, size, df_group1, df_group2, p_value
         print(e)
 
 
-def get_score(group, alpha, d, max_subpopulation):
+def get_score(group, alpha, d, N, L):
     intersection = 0
     g = []
-    for x in group.iterrows():
-        _, row = x
+    ni_score_sum = 0
+    for _, row in group.iterrows():
         g.append(row)
-    ni_score_sum = sum(x['ni_score'] for x in g)
-    utility = ni_score_sum / len(group)
+        if row["ni_score"]:
+            ni_score_sum += row['ni_score'] * row['support']
+    utility = ni_score_sum
     for row1, row2 in itertools.combinations(g, 2):
-        intersection += get_intersection(row1, row2, d)
-    f_intersection = ((max_subpopulation*len(group)*len(group)) - intersection) / (max_subpopulation*len(group)*len(group))
+        intersection += get_intersection(row1, row2, d, {})
+    f_intersection = ((N*L*L) - intersection) / (N*L*L)
     score = (alpha * utility) + ((1 - alpha) * f_intersection)
     return {"ni_score_sum": ni_score_sum, "utility": utility, "intersection_sum": intersection,
             "final_intersection": f_intersection, "score": score}
 
 
-def parse_subpoplation(df, sub_str):
+def parse_subpoplation(df_original, sub_str):
     sub_str = ast.literal_eval(sub_str)
+    df = df_original.copy()
     for s in sub_str:
-        k, v = s.split("=")
+        try:
+            k, v = s.split("=")
+        except:
+            print("here")
         try:
             v = int(v)
         except:
@@ -321,14 +290,23 @@ def parse_subpoplation(df, sub_str):
         df = df.loc[df[k]==v]
     group1 = df.loc[df['group1']==1]
     group2 = df.loc[df['group2']==1]
-    return group1, group2
+    size = df.shape[0]
+    belong_groups = df.loc[(df['group1'] == 1) | (df['group2'] == 1)]
+    support = belong_groups.shape[0] / df_original.shape[0]
+    return group1, group2, size, support
 
 
 def baseline(d: Dataset):
     df = pd.read_csv(d.clean_path)
+    N = df.shape[0]
     with open(f"data/{d.name}/causal_dag.txt", "r") as f:
         lines = f.readlines()
-    treatments, _ = findBestTreatment("", d, lines, 0.5)
+    p_value_threshold = 0.05 if d.name != "meps" else 0.1
+    if d.name == "acs":
+        d.clean_path = d.clean_path.replace("clean", "sample")
+    treatments, _ = findBestTreatment("", d, lines, p_value_threshold)
+    print(treatments)
+    df = pd.read_csv(d.clean_path)
     df['TempTreatment'] = df.apply(lambda row: int(all(row[attr] == val for attr, val in treatments)), axis=1)
     if len(treatments) > 1:
         dag = changeDAG(lines, [x[0] for x in treatments])
@@ -338,7 +316,7 @@ def baseline(d: Dataset):
             treatment_att_file_name = 'DevType'
         with open(f"data/{d.name}/causal_dags_files/{treatment_att_file_name}.pkl", 'rb') as file:
             dag = pickle.load(file)
-    """df = df.dropna()
+    df = df.dropna(subset=d.subpopulations_atts)
     y = df[d.outcome_col]
     X = df.drop(d.outcome_col, axis=1)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)
@@ -360,74 +338,76 @@ def baseline(d: Dataset):
         else:
             myDataset = ACSDataset(rootTrain=f"outputs/{d.name}/train.csv", rootTest=f"outputs/{d.name}/test.csv")
 
-    fairnessDebug = FairnessDebuggingUsingMachineUnlearning(myDataset,
-                                                            ["TempTreatment", 1, 0],
-                                                            d.outcome_col,
-                                                            FairnessMetric.CATE,
-                                                            dag,
-                                                            group1_idx,
-                                                            group2_idx
-                                                            )
-
-    bias_inducing_subsets = fairnessDebug.latticeSearchSubsets(2, (0.05, 1), "normal", False)
-    print(bias_inducing_subsets)
-    bias_inducing_subsets.sort_values(by=["Parity_Reduction","Size"], ascending=[False, False], ignore_index=True)\
-        .to_csv(f"outputs/{d.name}/baselines/facts_rf.csv", index=False)"""
+    # fairnessDebug = FairnessDebuggingUsingMachineUnlearning(myDataset,
+    #                                                         ["TempTreatment", 1, 0],
+    #                                                         d.outcome_col,
+    #                                                         FairnessMetric.CATE,
+    #                                                         dag,
+    #                                                         group1_idx,
+    #                                                         group2_idx
+    #                                                         )
+    #
+    # bias_inducing_subsets = fairnessDebug.latticeSearchSubsets(2, (0.05, 1), "normal", False)
+    # print(bias_inducing_subsets)
+    # bias_inducing_subsets.sort_values(by=["Parity_Reduction","Size"], ascending=[False, False], ignore_index=True)\
+    #     .to_csv(f"outputs/{d.name}/baselines/facts_rf.csv", index=False)
+    if d.name == "acs":
+        d.clean_path = d.clean_path.replace("sample", "clean")
     df_facts = pd.read_csv(f"outputs/{d.name}/baselines/facts_rf.csv")
+    df = pd.read_csv(d.clean_path)
+    L = df_facts.shape[0]
     res = []
     for _, row in df_facts.iterrows():
         sub = row["Subset"]
-        group1, group2 = parse_subpoplation(df, sub)
-        result = CalcIScore(treatments, d, lines, len(treatments), group1, group2, 1)
+        group1, group2, size, support = parse_subpoplation(df, sub)
+        result = CalcIScore(treatments, d, lines, len(treatments), group1, group2, p_value_threshold)
+        size_group1 = group1.shape[0]
+        size_group2 = group2.shape[0]
+        diff_means = np.mean(group1[d.outcome_col]) - np.mean(group2[d.outcome_col])
         if result:
-            size_group1 = group1.shape[0]
-            size_group2 = group2.shape[0]
-            diff_means = np.mean(group1[d.outcome_col]) - np.mean(group2[d.outcome_col])
             res.append({'subpopulation': sub, 'treatment': treatments, 'cate1': result[1], 'cate2': result[2],
                         'iscore': result[0], 'size_group1': size_group1, "size_group2": size_group2,
                         "diff_means": diff_means, "avg_group1": np.mean(group1[d.outcome_col]),
-                        "avg_group2": np.mean(group2[d.outcome_col])})
+                        "avg_group2": np.mean(group2[d.outcome_col]), "size": size, "support": support})
+        else:
+            res.append({'subpopulation': sub, 'treatment': treatments, 'cate1': None, 'cate2': None,
+                        'iscore': None, 'size_group1': size_group1, "size_group2": size_group2,
+                        "diff_means": diff_means, "avg_group1": np.mean(group1[d.outcome_col]),
+                        "avg_group2": np.mean(group2[d.outcome_col]), "size": size, "support": support})
     df = pd.DataFrame(res)
-    lamda = choose_lamda(list(df['iscore']))
-    df['ni_score'] = df['iscore'].apply(lambda x: ni_score(x, lamda))
-    facts = pd.read_csv(f"outputs/{d.name}/all_facts.csv")
-    max_subpopulation = max(facts["size_subpopulation"])
-    scores = get_score(group=df.head(K), alpha=ALPHA, d=d, max_subpopulation=max_subpopulation)
-    df.head(K).to_csv(f'outputs/{d.name}/baselines/facts_final_rf.csv', index=False)
+    df_clean = pd.read_csv(d.clean_path)
+    lamda = choose_lamda(df_clean[d.outcome_col])
+    df['ni_score'] = df['iscore'].apply(lambda x: ni_score(x, lamda) if x else None)
+    df = df.sort_values(by=['ni_score', 'support'], ascending=(False, False)).head(K)
+    df.to_csv(f'outputs/{d.name}/baselines/facts_final_rf.csv', index=False)
+    scores = get_score(group=df, alpha=ALPHA, d=d, N=N, L=L)
     pd.DataFrame([scores]).to_csv(f'outputs/{d.name}/baselines/rf_scores.csv')
 
 
-"""so = Dataset(name="so", outcome_col="ConvertedCompYearly",
-             treatments=['YearsCodingProf', 'Hobby', 'LastNewJob', 'Student', 'WakeTime', 'DevType'],
+meps = Dataset(name="meps", outcome_col="FeltNervous",
+               treatments=['Exercise', 'CurrentlySmoke', 'HoldHealthInsurance', 'Student', 'IsWorking'],
+               subpopulations=['MaritalStatus', 'Region', 'Race', 'IsWorking'],
+               columns_to_ignore=[], clean_path="outputs/meps/clean_data.csv",
+               func_filter_subs=meps_filter_facts, func_filter_treats=meps_filter_facts, need_filter_subpopulations=True, need_filter_treatments=True)
+so = Dataset(name="so", outcome_col="ConvertedSalary",
+             treatments=['YearsCodingProf', 'Hobby', 'FormalEducation', 'WakeTime', 'DevType'],
              subpopulations=['Gender', 'Age', 'RaceEthnicity_BlackorofAfricandescent', 'RaceEthnicity_EastAsian',
                              'RaceEthnicity_HispanicorLatino/Latina', 'RaceEthnicity_MiddleEastern',
                              'RaceEthnicity_NativeAmerican,PacificIslander,orIndigenousAustralian',
-                             'RaceEthnicity_SouthAsian', 'RaceEthnicity_WhiteorofEuropeandescent', 'Country'],
+                             'RaceEthnicity_SouthAsian', 'RaceEthnicity_WhiteorofEuropeandescent'],
              columns_to_ignore=['RaceEthnicity_BlackorofAfricandescent=0', 'RaceEthnicity_EastAsian=0',
                                 'RaceEthnicity_HispanicorLatino/Latina=0', 'RaceEthnicity_MiddleEastern=0',
                                 'RaceEthnicity_NativeAmerican,PacificIslander,orIndigenousAustralian=0',
                                 'RaceEthnicity_SouthAsian=0', 'RaceEthnicity_WhiteorofEuropeandescent=0'],
-             clean_path="outputs/so/clean_data.csv", func_filter_facts=so_filter_facts, need_filter_subpopulations=True)
-
-
-meps = Dataset(name="meps", outcome_col="IsDiagnosedDiabetes",
-               treatments=['DoesDoctorRecommendExercise', 'TakesAspirinFrequently', 'BMI', 'Exercise',
-                           'CurrentlySmoke'],
-               subpopulations=['MaritalStatus', 'Region', 'Race', 'Education',
-                               'IsDiagnosedAsthma', 'IsBornInUSA', 'IsWorking'],
-               columns_to_ignore=['Education=UnAcceptable', 'IsWorking=UnAcceptable'], clean_path="outputs/meps/clean_data.csv",
-               func_filter_facts=meps_filter_facts, need_filter_subpopulations=True)"""
-# , 'Cognitive difficulty',
-#                               'Region', 'Language other than English spoken at home', 'Citizenship status', 'state code',
-#                               'Percent of poverty status', 'Marital status', 'Hearing difficulty', 'Related child', 'Nativity'
+             clean_path="outputs/so/clean_data.csv", func_filter_subs=so_filter_facts, func_filter_treats=so_filter_facts, need_filter_subpopulations=True, need_filter_treatments=True)
 acs = Dataset(name="acs", outcome_col="Health insurance coverage recode",
-              treatments=['Wages or salary income past 12 months', 'Temporary absence from work', "Total person's earnings", 'Occupation recode', 'Worked last week',
-                          'Insurance purchased directly from an insurance company', 'Indian Health Service', 'Class of Worker', 'Informed of recall', 'Educational attainment'],
-              subpopulations=['Sex', 'Age', 'With a disability', 'School enrollment', 'Cognitive difficulty', 'Region',
-              'Language other than English spoken at home', 'Citizenship status'],
-              columns_to_ignore=[], clean_path="outputs/acs/sample_data.csv", func_filter_subs=acs_filter_subs, need_filter_subpopulations=True, need_filter_treatments=True,
+              treatments=['Temporary absence from work', 'Worked last week', "person weight",
+                          'Widowed in the past 12 months', "Total person's earnings",
+                          'Educational attainment', 'Georgraphic division'],
+              subpopulations=['Sex', 'Age', 'With a disability', 'Region'],
+              columns_to_ignore=[], clean_path="outputs/acs/clean_data.csv", func_filter_subs=acs_filter_subs, need_filter_subpopulations=True, need_filter_treatments=True,
               func_filter_treats=acs_filter_treats)
 
-#baseline(so) # p value 0.4
-#baseline(meps)
+baseline(so)
+baseline(meps)
 baseline(acs)
