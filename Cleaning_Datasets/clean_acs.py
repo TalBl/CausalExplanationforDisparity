@@ -193,23 +193,24 @@ occupation_mapping = {
     'LGL': 'Legal',
 }
 
-
-
 def clean_and_transform_data():
     cleaned_df = pd.read_csv("outputs/acs/2018_all_data_clean.csv")
     cleaned_df = cleaned_df[['Sex', 'Age', 'With a disability', 'Place of birth', 'School enrollment', 'Cognitive difficulty',
                              'Region', 'Language other than English spoken at home', 'Citizenship status', 'state code',
                              'Percent of poverty status', 'Marital status', 'Hearing difficulty', 'Related child', 'Nativity',
-                             'Wages or salary income past 12 months', 'Temporary absence from work', "Total person's earnings", 'Occupation recode', 'Worked last week',
+                             'Wages or salary income past 12 months', 'Temporary absence from work', "Total person's income", 'Occupation recode', 'Worked last week',
                              'Insurance purchased directly from an insurance company', 'Indian Health Service', 'Class of Worker', 'Informed of recall', 'Educational attainment',
                              'Insurance through a current or former employer or union','Race/Ethnicity','Health insurance coverage recode',
                              'Gave birth within past year', 'Place of work - State or foreign country recode', 'Ability to speak English',
-                             'Widowed in the past 12 months', 'Person Weight']]
+                             'Widowed in the past 12 months', 'person weight', 'When last worked', 'Georgraphic division', 'Raw labor-force status',
+                             'Adjustment factor for income and earnings dollar amounts', 'Employment status of parents', "Total person's earnings",
+                             "Usual hours worked per week past 12 months", "Medicaid, Medical Assistance, or any kind of government-assistance plan for those with low incomes or a disability",
+                             "Field of degree - Science and Engineering flag", "Weeks worked during past 12 months", "Looking for work"]]
     for column in cleaned_df.columns:
-        if column == "Total person's earnings":
+        if column == "Total person's income":
             continue
         if pd.api.types.is_numeric_dtype(cleaned_df[column]):
-            unique_values = cleaned_df[column].dropna().nunique()
+            unique_values = cleaned_df[cleaned_df[column] >= 0][column].dropna().nunique()
             if unique_values > 5:
                 # Calculate percentiles, ensuring unique bin edges
                 percentiles = np.percentile(cleaned_df[column].dropna(), [0, 20, 40, 60, 80, 100])
@@ -231,11 +232,16 @@ def clean_and_transform_data():
     cleaned_df['Educational attainment'] = cleaned_df['Educational attainment'].map(education_mapping)
     cleaned_df['Occupation recode'] = cleaned_df['Occupation recode'].map(occupation_mapping)
     cleaned_df['Health insurance coverage recode'] = cleaned_df['Health insurance coverage recode'].apply(lambda x: 1 if x == "yes" else 0)
-    cleaned_df['group1'] = cleaned_df['Race/Ethnicity'].apply(lambda x: 1 if x != "White alone" else 0)
+    #cleaned_df['group1'] = cleaned_df['Race/Ethnicity'].apply(lambda x: 1 if x != "White alone" else 0)
+    cleaned_df['group1'] = cleaned_df['Occupation recode'].apply(lambda x: 1 if x in ["Cleaning and Maintenance", "Farming, Fishing, and Forestry", "Repair and Maintenance", "Construction"] else 0)
     cleaned_df['group2'] = 1
-    cleaned_df.drop(columns=['Race/Ethnicity'], inplace=True)
-    threshold = 0.5 * len(cleaned_df)  # 50% of the number of rows
-    cleaned_df = cleaned_df.loc[:, cleaned_df.isnull().sum() <= threshold]
+    cleaned_df = cleaned_df[['Temporary absence from work', 'Worked last week', "person weight",
+                             'Widowed in the past 12 months', "Total person's earnings",
+                             'Educational attainment', 'Georgraphic division', 'Sex', 'Age', 'With a disability', "Race/Ethnicity",
+                             'Region', 'Language other than English spoken at home', 'state code',
+                             'Marital status', 'Nativity', 'Related child', 'group1', 'group2', 'Health insurance coverage recode']]
+    #threshold = 0.5 * len(cleaned_df)  # 50% of the number of rows
+    #cleaned_df = cleaned_df.loc[:, cleaned_df.isnull().sum() <= threshold]
     return cleaned_df
 
 
@@ -273,7 +279,7 @@ def calc_raw():
         "JWAP", "JWDP", "DRAT", "DRATX", "JWMNP",
 
         # Derived Attributes
-        "FER", "ENG", "GCR"
+        "ENG", "GCR", "WKHP", "HINS4", "SCIENGP"
     ]
     df = df[list(set(fields_list))]
     dict_translation = make_translation_for_ACS(list(df.columns))
@@ -282,8 +288,8 @@ def calc_raw():
 
 #calc_raw()
 #df = pd.read_csv("outputs/acs/2018_all_data_clean.csv")
-df_clean = clean_and_transform_data()
-df_clean.to_csv("outputs/acs/clean_data.csv", index=False)
+# df_clean = clean_and_transform_data()
+# df_clean.to_csv("outputs/acs/clean_data.csv", index=False)
 
 """
 # Path to your text file
