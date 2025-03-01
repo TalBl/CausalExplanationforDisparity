@@ -111,7 +111,6 @@ DAG = [
 'CurrentlySmoke -> IsDiagnosedCancer;',
 
 'FeltNervous -> BMI;',
-'FeltNervous -> Exercise;',
 
 'HoldHealthInsurance -> HowOftenCheckInDoctor;',
 'HoldHealthInsurance -> DoesDoctorRecommendExercise;',
@@ -130,4 +129,7 @@ DAG = [
 
 'BMI -> IsDiagnosedDiabetes;',
 'BMI -> IsDiagnosedAsthma;',
+
+'HoldHealthInsurance -> FeltNervous;',
+'Exercise -> FeltNervous;',
 ]
