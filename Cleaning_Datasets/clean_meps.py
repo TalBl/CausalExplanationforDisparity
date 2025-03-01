@@ -15,10 +15,13 @@ column_mappings = {
     "PHYEXE53": {1: 1, 2: 0},
     "ADSMOK42": {1: 1, 2: 0},
     "ASPRIN53": {1: 1, 2: 0},
-    "ASTHDX": {1: 1, 2: 0},
+    "MIDX": {1: 1, 2: 0, -1: None, -7: None, -8: None, -9: None},
+    "ASTHDX": {1: 1, 2: 0, -1: None, -7: None, -8: None, -9: None},
     "EMPST53": {1: "ActivelyWorking", 2: "NotCurrentlyWorkingButHasAJob", 3: "WorkedAtSomePointDuringTheYear", 4: "NotEmployed",
                 -7: "UnAcceptable", -8: "UnAcceptable", -9: "UnAcceptable"},
-    "DIABDX": {1: 1, 2: 0}
+    "DIABDX": {1: 1, 2: 0, -1: None, -7: None, -8: None, -9: None},
+    "ADNERV42": {1: 1, 2: 1, 3: 0, 4: 0, 0: 0, -1: None, -9: None},
+    "FTSTU15X": {1: 1, 2: 0, 3: -1, -1: -1, -9: -1}
 }
 
 
@@ -26,7 +29,7 @@ column_mappings = {
 def map_flags_to_values(df, column_mappings):
     for col, mapping in column_mappings.items():
         if col in df.columns:
-            df[col] = df[col].map(mapping).fillna(df[col])  # Retain original if no mapping is provided
+            df[col] = df[col].map(mapping)  # Retain original if no mapping is provided
     return df
 
 
@@ -69,15 +72,17 @@ def build_mini_df():
     df["WearsSeatBelt"] = df["SEATBE53"]
 
     df = df.dropna()
-    df = df[['group1', 'group2', 'BMI', 'Age', 'Region', 'MaritalStatus', 'Student', 'Race', 'Education', 'FamilyIncomeWage',
+    """df = df[['group1', 'group2', 'BMI', 'Age', 'Region', 'MaritalStatus', 'Student', 'Race', 'Education', 'FamilyIncomeWage',
                'IsHadHeartAttack', 'IsHadStroke', 'IsDiagnosedCancer', 'IsADHD/ADD_Diagnisos',
                 'IsDiagnosedAsthma', 'IsBornInUSA',
                'DoesDoctorRecommendExercise', 'LongSinceLastFluVaccination', 'TakesAspirinFrequently', 'Exercise',
-               'WearsSeatBelt', 'FeltNervous', 'HoldHealthInsurance', 'IsWorking', 'CurrentlySmoke', 'IsDiagnosedDiabetes', 'HowOftenCheckInDoctor']]
+               'WearsSeatBelt', 'FeltNervous', 'HoldHealthInsurance', 'IsWorking', 'CurrentlySmoke', 'IsDiagnosedDiabetes', 'HowOftenCheckInDoctor']]"""
+    df = df[['group1', 'group2', 'MaritalStatus', 'Region', 'Race', 'Education', 'Age', 'HoldHealthInsurance', 'FeltNervous', 'Student',
+             'IsDiagnosedAsthma', 'IsBornInUSA', 'IsWorking', 'DoesDoctorRecommendExercise', 'Exercise', 'CurrentlySmoke',
+             'TakesAspirinFrequently']]
     df = df.loc[(df["group1"] == 1) | (df["group2"] == 1)]
-    proportion_of_neg1 = (df == -1).mean()
-    df = df.loc[:, proportion_of_neg1 <= 0.5]
-    for column in ['Age', 'BMI']:
+    df = df.loc[df['FeltNervous']>=0]
+    for column in ['Age']:
         if pd.api.types.is_numeric_dtype(df[column]):
             unique_values = df[column].dropna().nunique()
             if unique_values > 5:
@@ -94,8 +99,6 @@ def build_mini_df():
                     df[column] = pd.cut(
                         df[column], bins=percentiles, labels=bin_labels, include_lowest=True
                     )
-    numerical_cols = df.select_dtypes(include=['number']).columns
-    df = df[(df[numerical_cols] >= 0).all(axis=1)]
     return df
 
 
@@ -126,7 +129,7 @@ OUTCOME_COLUMN = "BMI"
 COLUMNS_TO_IGNORE = []
 
 def filter_facts(avg1, avg2):
-    return avg2 > avg1
+    return avg2 < avg1
 
-#d = build_mini_df()
-#d.to_csv("outputs/meps/clean_data.csv", index=False)
+# d = build_mini_df()
+# d.to_csv("outputs/meps/clean_data.csv", index=False)
