@@ -1,0 +1,71 @@
+ni_score_sum,utility,intersection_sum,final_intersection,score,row
+0.011521000371131645,0.011521000371131645,0,1.0,0.35748865024123555,"subpopulation                                 {'Age=25 - 34 years old'}
+treatment             (('HopeFiveYears', 'Doing the same work'), ('Y...
+cate1                                                      90389.912103
+cate2                                                      16929.776497
+iscore                                                     73460.135606
+size_subpopulation                                                23888
+size_group1                                                        1905
+size_group2                                                       14495
+support                                                        0.319462
+diff_means                                                  3864.643306
+avg_group1                                                 96984.641995
+avg_group2                                                 93119.998689
+ni_score                                                       0.036064
+Name: 3, dtype: object"
+0.01652460209374903,0.01652460209374903,16523,0.9999788586665818,0.3607335918942405,"subpopulation         {'RaceEthnicity_WhiteorofEuropeandescent=1'}
+treatment                    (('YearsCodingProf', '24-26 years'),)
+cate1                                                 87039.778298
+cate2                                                 63673.306717
+iscore                                                23366.471581
+size_subpopulation                                           32049
+size_group1                                                   2770
+size_group2                                                  19540
+support                                                   0.430779
+diff_means                                            13812.378546
+avg_group1                                           122765.998556
+avg_group2                                            108953.62001
+ni_score                                                  0.011615
+Name: 1, dtype: object"
+0.021339418049695896,0.021339418049695896,61148,0.9999217605606814,0.36384323792854084,"subpopulation         {'RaceEthnicity_WhiteorofEuropeandescent=1', '...
+treatment                         (('YearsCodingProf', '24-26 years'),)
+cate1                                                      89048.946503
+cate2                                                      64959.882763
+iscore                                                      24089.06374
+size_subpopulation                                                29514
+size_group1                                                        2543
+size_group2                                                       18286
+support                                                        0.402163
+diff_means                                                 12898.309581
+avg_group1                                                122605.923712
+avg_group2                                                109707.614131
+ni_score                                                       0.011972
+Name: 2, dtype: object"
+0.024944642089400466,0.024944642089400466,109305,0.9998601432276654,0.36616506748779315,"subpopulation         {'RaceEthnicity_WhiteorofEuropeandescent=1', '...
+treatment                           (('YearsCodingProf', '6-8 years'),)
+cate1                                                      44513.959923
+cate2                                                       11687.07229
+iscore                                                     32826.887633
+size_subpopulation                                                16523
+size_group1                                                        1304
+size_group2                                                       10026
+support                                                        0.221458
+diff_means                                                  9788.886111
+avg_group1                                                115777.516871
+avg_group2                                                 105988.63076
+ni_score                                                       0.016279
+Name: 5, dtype: object"
+0.028174288377022964,0.028174288377022964,169749,0.9997828045629474,0.3682372690420965,"subpopulation         {'RaceEthnicity_WhiteorofEuropeandescent=1', '...
+treatment                           (('YearsCodingProf', '6-8 years'),)
+cate1                                                      42184.763386
+cate2                                                      10520.127703
+iscore                                                     31664.635683
+size_subpopulation                                                15111
+size_group1                                                        1177
+size_group2                                                        9341
+support                                                         0.20561
+diff_means                                                 10132.474397
+avg_group1                                                117247.715378
+avg_group2                                                107115.240981
+ni_score                                                       0.015708
+Name: 6, dtype: object"
