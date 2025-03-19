@@ -17,6 +17,24 @@ with open('demo/gpt_api_key.txt') as f:
 client = OpenAI(api_key=OPEN_AI_API_KEY)
 
 st.set_page_config(page_title="DisEx", layout='wide', initial_sidebar_state="expanded")
+st.markdown(
+    """
+    <style>
+        .block-container {
+            max-width: 2000px;  /* Adjust width as needed */
+            margin: auto;  /* Center the content */
+        }
+        body, .stText, .stMarkdown {
+            font-size: 18px !important; /* Adjust the text size */
+        }
+        div.stFileUploader > label {
+            font-size: 50px 
+            font-weight: bold; /* Optional: make it bold */
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 
 def split_camel_case(text):
@@ -91,10 +109,13 @@ def create_colored_dot(s, min_value, max_value):
     return [f"background-color: rgb({r[i]}, {g[i]}, {b})" for i in range(len(s))]
 
 def format_currency(value):
+    return f"{round(float(value)*100, 2):,}%" # MEPS + ACS cases
     return f"${int(value):,}"  # Convert to int, add thousand separators
 
 def color_ate_cell(value, min_value, max_value):
-    value = int(value.replace("$", "").replace(",", ""))
+    # value = int(value.replace("$", "").replace(",", ""))
+    value = float(value.replace("%", "").replace(",", ""))
+    # rgb(139,0,0), rgb(255,255,255), rgb(0,128,0))
     normalized = (value - min_value) / (max_value - min_value)
 
     # When the value is in the middle, the color should be white
@@ -116,7 +137,7 @@ def increase_rows2():
     st.session_state[f'rows_group2'] += 1
 
 def calc_algorithm():
-    df = pd.read_csv("outputs/so/find_k/5_0.65.csv")
+    df = pd.read_csv("outputs/so/find_k/meps_5_0.65.csv")
     st.dataframe(df, use_container_width=True)
 
 def valid_group(group_name):
@@ -167,9 +188,9 @@ file_to_use = output_col = group1_query = group2_query = file_dag = imutable_att
 
 with st.container():
     # First row: Centered title
-    st.markdown("<h1 style='text-align: center; font-size: 60px; color: whit;'>DisEx</h1>", unsafe_allow_html=True)
+    # st.markdown("<h1 style='text-align: center; font-size: 60px; color: whit;'>DisEx</h1>", unsafe_allow_html=True)
 
-    col1, col2 = st.columns([4, 6], border=True)
+    col1, col2 = st.columns([2, 3], border=True)
 
     with col1:
         st.markdown("<h1 style='font-size:36px;'>Settings</h1>", unsafe_allow_html=True)
@@ -195,10 +216,19 @@ with st.container():
         # '''
         # st.markdown(css, unsafe_allow_html=True)
         _col1, _col2 = st.columns([1, 1], vertical_alignment='center')
+        hide_file_limit_css = """
+        <style>
+            div[data-testid="stFileUploader"] div small {
+                display: none;
+            }
+        </style>
+        """
+
+        st.markdown(hide_file_limit_css, unsafe_allow_html=True)
         with _col1:
-            file_to_use = st.file_uploader(label="Upload your dataset", type=["csv"], key="dataset")
+            file_to_use = st.file_uploader(label="\n Upload your dataset", type=["csv"], key="dataset")
         with _col2:
-            file_dag = st.file_uploader("We will automatically discover causal DAG from your data once you upload it. If you want to use your own causal DAG, you can manually upload it here", type=["txt"], key="dag_file")
+            file_dag = st.file_uploader("Upload a causal DAG or we'll automatically discover one", type=["txt"], key="dag_file")
         # with _col3:
         #     st.button("Discover Causal DAG")
         # file_to_use = st.file_uploader(label="Upload your dataset", type=["csv"])
@@ -446,7 +476,7 @@ with st.container():
                 mutable_atts = st.multiselect("Select attributes that are actionable", available_cols, key=mutable_atts)
             if mutable_atts:
                 options = [5, 10, 15, 20, 25, 30]
-                options2 = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
+                options2 = [0, 0.5, 1]
                 # Render a row of tick marks above the slider
                 value = st.select_slider("How many explanations do you want?", options=options)
                 st.markdown(
@@ -487,7 +517,7 @@ with st.container():
                         }
                     </style>
                     <div class="tick-marks">
-                        <span>0</span><span>0.1</span><span>0.2</span><span>0.3</span><span>0.4</span><span>0.5</span><span>0.6</span><span>0.7</span><span>0.8</span><span>0.9</span><span>1</span>
+                        <span>Diversity: 1</span><span>Diversity: 0.5</span><span>Diversity: 0</span>
                     </div>
                     """, unsafe_allow_html=True)
                 st.markdown(
@@ -507,7 +537,7 @@ with st.container():
                         }
                     </style>
                     <div class="tick-marks">
-                        <span>Diversity</span><span>Utility</span>
+                        <span>Utility: 0</span><span>Utility: 0.5</span><span>Utility: 1</span>
                     </div>
                     """, unsafe_allow_html=True)
 
@@ -576,20 +606,25 @@ with st.container():
                     # if st.session_state["group1"] and st.session_state["group2"]:
                     # if (exists_group(s, st.session_state["Group_A"], st.session_state[f"clear_Group_A"])) and (exists_group(s, st.session_state['Group_B'], st.session_state[f"clear_Group_B"])):
                     #     return ['background-color: #FABEDB']*len(s)
-                    if exists_group(s, st.session_state["Group_A"], st.session_state[f"clear_Group_A"]):
-                        return ['background-color: #BEEBFA']*len(s)
-                    if exists_group(s, st.session_state['Group_B'], st.session_state[f"clear_Group_B"]):
-                        return ['background-color: #DCBEFA']*len(s)
-                    return ['background-color: #BEFAD3']*len(s)
+                    group_a = exists_group(s, st.session_state["Group_A"], st.session_state["clear_Group_A"])
+                    group_b = exists_group(s, st.session_state["Group_B"], st.session_state["clear_Group_B"])
+
+                    # if group_a and group_b:
+                    #     return ['background-color: #FABEDB'] * len(s)  # Overlapping color
+                    if group_a:
+                        return ['background-color: #BEEBFA'] * len(s)
+                    elif group_b:
+                        return ['background-color: #DCBEFA'] * len(s)
+                    return [""] * len(s)  # No styling
                 column_config = {
                     output_col: st.column_config.Column(
                         label=f"👉 {output_col}",  # Add an arrow for emphasis
                         pinned=True,
                     )
                 }
-                st.dataframe(df.style.apply(highlight_groups, axis=1), column_config=column_config, height=750)
+                st.dataframe(df.style.apply(highlight_groups, axis=1), column_config=column_config, height=500)
                 # "Both": "#FABEDB",
-                color_legend = {group_a_text: "#BEEBFA",  group_b_text: "#DCBEFA",  "None": "#BEFAD3"}
+                color_legend = {group_a_text: "#BEEBFA",  group_b_text: "#DCBEFA"}
                 # st.markdown("### Color Legend")
 
                 legend, group_avg_col = st.columns([2, 2])
@@ -607,123 +642,124 @@ with st.container():
                 with group_avg_col:
                     group_a_avg = df[df.apply(lambda r: exists_group(r, st.session_state["Group_A"], st.session_state[f"clear_Group_A"]), axis=1)].loc[:, output_col].mean()
                     group_b_avg = df[df.apply(lambda r: exists_group(r, st.session_state["Group_B"], st.session_state[f"clear_Group_B"]), axis=1)].loc[:, output_col].mean()
-                    st.write(f"**Average {'salary' if output_col == 'ConvertedSalary' else split_camel_case(output_col).lower()} for {group_a_text}:** \${group_a_avg:.2f} \n  **Average {'salary' if output_col == 'ConvertedSalary' else split_camel_case(output_col).lower()} for {group_b_text}:** \${group_b_avg:.2f}")
+                    st.write(f"**Average {'salary' if output_col == 'ConvertedSalary' else split_camel_case(output_col).lower()} for {group_a_text}:** {group_a_avg*100:.2f}\% \n  **Average {'salary' if output_col == 'ConvertedSalary' else split_camel_case(output_col).lower()} for {group_b_text}:** {group_b_avg*100:.2f}\%")
                     # st.write(f"**Average Group B:** {group_b_avg:.2f}")
         with st.container():
-            st.markdown("<h1 style='font-size:36px;'>Causal Explanations</h1>", unsafe_allow_html=True)
-            df2 = pd.read_csv("demo/res2.csv")
-            df2["support"] = df2["support"].apply(create_pie_chart)
-            df2['affect_group1'] = df2['ate1'] / df2['avg_group1']
-            df2['affect_group2'] = df2['ate2'] / df2['avg_group2']
-            #df2["ate_group1"] = df2["affect_group1"].apply(create_colored_dot)
-            #df2["ate_group2"] = df2["affect_group2"].apply(create_colored_dot)
-            # column_descriptions = {
-            #     "ATE1": f"Average Treatment Effect for {group_a_text}.",
-            #     "ATE2": f"Average Treatment Effect for {group_b_text}.",
-            #     "AVG_O1": f"Average salary for {group_a_text}.",
-            #     "AVG_O2": f"Average salary for {group_b_text}.",
-            # }
-            # def create_tooltip(column_name, description):
-            #     return f"""
-            #         <div style="display: flex; align-items: center; gap: 5px;">
-            #             <span>{column_name}</span>
-            #             <span title="{description}" style="cursor: help; color: blue; font-weight: bold;">❓</span>
-            #         </div>
-            #         """
+            if 'Group A' in st.session_state and 'Group B' in st.session_state:
+                st.markdown("<h1 style='font-size:36px;'>Causal Explanations</h1>", unsafe_allow_html=True)
+                df2 = pd.read_csv("demo/meps_5_0.65.csv")
+                df2["support"] = df2["support"].apply(create_pie_chart)
+                df2['affect_group1'] = df2['ate1'] / df2['avg_group1']
+                df2['affect_group2'] = df2['ate2'] / df2['avg_group2']
+                #df2["ate_group1"] = df2["affect_group1"].apply(create_colored_dot)
+                #df2["ate_group2"] = df2["affect_group2"].apply(create_colored_dot)
+                # column_descriptions = {
+                #     "ATE1": f"Average Treatment Effect for {group_a_text}.",
+                #     "ATE2": f"Average Treatment Effect for {group_b_text}.",
+                #     "AVG_O1": f"Average salary for {group_a_text}.",
+                #     "AVG_O2": f"Average salary for {group_b_text}.",
+                # }
+                # def create_tooltip(column_name, description):
+                #     return f"""
+                #         <div style="display: flex; align-items: center; gap: 5px;">
+                #             <span>{column_name}</span>
+                #             <span title="{description}" style="cursor: help; color: blue; font-weight: bold;">❓</span>
+                #         </div>
+                #         """
 
-            # min_ate = min(df2["ate1"].min(), df2["ate2"].min())
-            # max_ate = max(df2["ate1"].max(), df2["ate2"].max())
-            df2["Avg Treatment Effect for Group A"] = df2["ate1"].apply(format_currency)
-            df2["Avg Treatment Effect for Group B"] = df2["ate2"].apply(format_currency)
-            df2["Avg TC for Group A"] = df2["avg_group1"].apply(format_currency)
-            df2["Avg TC for Group B"] = df2["avg_group2"].apply(format_currency)
-            df2["subpopulation"] = df2["subpopulation"].apply(prompt_descriptive_group_name)
-            df2["treatment"] = df2["treatment"].apply(prompt_descriptive_group_name)
-            # ll = [f"E{x}" for x in range(1, len(df2)+1)]
-            # df2["new_index"] = [f"E{x}" for x in range(1, len(df2)+1)]
-            df2.index = [f"E{x}" for x in range(1, len(df2)+1)]
-            df2 = df2[["subpopulation", "support", "treatment", "Avg TC for Group A", "Avg TC for Group B", "Avg Treatment Effect for Group A", "Avg Treatment Effect for Group B"]]
-            # df2.columns = ["subpopulation", "support", "AVG_O1", "AVG_O2", "treatment", "ATE1", "ATE2"]
-            styled_df = df2.style.map(lambda v: color_ate_cell(v, min_value=-200000, max_value=200000), subset=["Avg Treatment Effect for Group A", "Avg Treatment Effect for Group B"])\
-                        .set_properties(
-                            **{"text-align": "left"}, subset=["subpopulation", "treatment"]
-                        ).set_properties(
-                            **{"text-align": "right"}, subset=["Avg TC for Group A", "Avg TC for Group B", "Avg Treatment Effect for Group A",
-                                                               "Avg Treatment Effect for Group B"]
-                        ) \
-                .set_table_styles(
-                [
-                    {'selector': 'th', 'props': [('text-align', 'center')]},  # Center the header
-                ]
-            )
+                # min_ate = min(df2["ate1"].min(), df2["ate2"].min())
+                # max_ate = max(df2["ate1"].max(), df2["ate2"].max())
+                df2["Avg Treatment Effect for Group A"] = df2["ate1"].apply(format_currency)
+                df2["Avg Treatment Effect for Group B"] = df2["ate2"].apply(format_currency)
+                df2["Avg likelihood of feeling nervous frequently for Group A"] = df2["avg_group1"].apply(format_currency)
+                df2["Avg likelihood of feeling nervous frequently for Group B"] = df2["avg_group2"].apply(format_currency)
+                df2["subpopulation"] = df2["subpopulation"].apply(prompt_descriptive_group_name)
+                df2["treatment"] = df2["treatment"].apply(prompt_descriptive_group_name)
+                # ll = [f"E{x}" for x in range(1, len(df2)+1)]
+                # df2["new_index"] = [f"E{x}" for x in range(1, len(df2)+1)]
+                df2.index = [f"E{x}" for x in range(1, len(df2)+1)]
+                df2 = df2[["subpopulation", "support", "treatment", "Avg likelihood of feeling nervous frequently for Group A", "Avg likelihood of feeling nervous frequently for Group B", "Avg Treatment Effect for Group A", "Avg Treatment Effect for Group B"]]
+                # df2.columns = ["subpopulation", "support", "AVG_O1", "AVG_O2", "treatment", "ATE1", "ATE2"]
+                styled_df = df2.style.map(lambda v: color_ate_cell(v, min_value=-100, max_value=100), subset=["Avg Treatment Effect for Group A", "Avg Treatment Effect for Group B"])\
+                            .set_properties(
+                                **{"text-align": "left"}, subset=["subpopulation", "treatment"]
+                            ).set_properties(
+                                **{"text-align": "right"}, subset=["Avg likelihood of feeling nervous frequently for Group A", "Avg likelihood of feeling nervous frequently for Group B", "Avg Treatment Effect for Group A",
+                                                                   "Avg Treatment Effect for Group B"]
+                            ) \
+                    .set_table_styles(
+                    [
+                        {'selector': 'th', 'props': [('text-align', 'center')]},  # Center the header
+                    ]
+                )
 
-            html_output = styled_df.to_html(escape=False, index=False)
-            # for column, tooltip in column_descriptions.items():
-            #     # Create a regex pattern to match the <th> with the column name
-            #     pattern = re.compile(rf'<th .*>{column}</th>')
-            #     orig_header = re.findall(pattern, html_output)[0]
-            #     new_header = orig_header.replace(column, create_tooltip(column, tooltip))
-            #     html_output = html_output.replace(orig_header, new_header)
+                html_output = styled_df.to_html(escape=False, index=False)
+                # for column, tooltip in column_descriptions.items():
+                #     # Create a regex pattern to match the <th> with the column name
+                #     pattern = re.compile(rf'<th .*>{column}</th>')
+                #     orig_header = re.findall(pattern, html_output)[0]
+                #     new_header = orig_header.replace(column, create_tooltip(column, tooltip))
+                #     html_output = html_output.replace(orig_header, new_header)
 
-            st.markdown(html_output, unsafe_allow_html=True)
-            # styled_headers = {col: create_tooltip(col, column_descriptions.get(col, "")) for col in df2.columns}
-            # Add the gradient legend to the second column
-            st.write("Legend for Average Treatment Effect")
-            gradient_html = """
-            <div style="width: 100%; height: 20px;
-                background: linear-gradient(to right, rgb(139,0,0), rgb(255,255,255), rgb(0,128,0));
-                border: 2px solid #808080; "></div>
-            """
-            st.markdown(gradient_html, unsafe_allow_html=True)
-
-            # Add labels under the gradient in the second column
-            st.markdown(
+                st.markdown(html_output, unsafe_allow_html=True)
+                # styled_headers = {col: create_tooltip(col, column_descriptions.get(col, "")) for col in df2.columns}
+                # Add the gradient legend to the second column
+                st.write("Legend for Average Treatment Effect")
+                gradient_html = """
+                <div style="width: 100%; height: 20px;
+                    background: linear-gradient(to right, rgb(139,0,0), rgb(255,255,255), rgb(0,128,0));
+                    border: 2px solid #808080; "></div>
                 """
-                <div style="display: flex; justify-content: space-between; font-size: 18px;">
-                    <span style="color: black;">Deterioration</span>
-                    <span style="color: black;">No Effect</span>
-                    <span style="color: black;">Improvement</span>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-            # st.dataframe(df3)
-            scores_df = pd.read_csv("demo/5_0.65.csv")
-            scores_df = scores_df[['utility', 'final_intersection', 'score']]
-            scores_df = scores_df.rename(columns={'utility': 'Utility', 'final_intersection': 'Diversity', 'score': 'Overall quality'})
-            scores_row = scores_df.iloc[-1].to_dict()
-            colored_star = """
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" width="31.9727px" height="35.5859px" fill='yellow'>
-              <path fill='#F6DC43' d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z" fill="gray"/>
-            </svg>
-            """
-            grayed_star = """
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" width="31.9727px" height="35.5859px" fill='yellow'>
-              <path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z" fill="gray"/>
-            </svg>
-            """
-            for i,score in enumerate(['Overall quality', 'Diversity', 'Utility']):
-                col4, col5, col6 = st.columns([1,1,1], vertical_alignment='center')
-                value_s = scores_row[score]
-                num_yellow_stars = math.ceil(value_s / 0.2)
-                num_grey_stars = 5 - num_yellow_stars
-                with col4:
-                    st.markdown(f"""
-                        <div style="display: flex; align-items: center;">
-                            <h1 style="font-size: 25px; margin-right: 10px;">{score}</h1>
-                    """, unsafe_allow_html=True)
-                with col5:
-                    st.markdown(f"""
-                        <div style="display: flex; align-items: center;">
-                            <div style="display: flex;">
-                                {''.join([colored_star for _ in range(num_yellow_stars)])}
-                                {''.join([grayed_star for _ in range(num_grey_stars)])}
-                    """, unsafe_allow_html=True)
-                with col6:
-                    st.markdown(f"""
-                        <div style="display: flex; align-items: center;">
-                            <h1 style="font-size: 25px; margin-right: 10px;">{int(value_s*100)}%</h1>
-                    """, unsafe_allow_html=True)
+                st.markdown(gradient_html, unsafe_allow_html=True)
+
+                # Add labels under the gradient in the second column
+                st.markdown(
+                    """
+                    <div style="display: flex; justify-content: space-between; font-size: 18px;">
+                        <span style="color: black;">Deterioration</span>
+                        <span style="color: black;">No Effect</span>
+                        <span style="color: black;">Improvement</span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+                # st.dataframe(df3)
+                scores_df = pd.read_csv("demo/5_0.65.csv")
+                scores_df = scores_df[['utility', 'final_intersection', 'score']]
+                scores_df = scores_df.rename(columns={'utility': 'Utility', 'final_intersection': 'Diversity', 'score': 'Overall quality'})
+                scores_row = scores_df.iloc[-1].to_dict()
+                colored_star = """
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" width="31.9727px" height="35.5859px" fill='yellow'>
+                  <path fill='#F6DC43' d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z" fill="gray"/>
+                </svg>
+                """
+                grayed_star = """
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" width="31.9727px" height="35.5859px" fill='yellow'>
+                  <path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z" fill="gray"/>
+                </svg>
+                """
+                for i,score in enumerate(['Overall quality', 'Diversity', 'Utility']):
+                    col4, col5, col6 = st.columns([1,1,1], vertical_alignment='center')
+                    value_s = scores_row[score]
+                    num_yellow_stars = math.ceil(value_s / 0.2)
+                    num_grey_stars = 5 - num_yellow_stars
+                    with col4:
+                        st.markdown(f"""
+                            <div style="display: flex; align-items: center;">
+                                <h1 style="font-size: 25px; margin-right: 10px;">{score}</h1>
+                        """, unsafe_allow_html=True)
+                    with col5:
+                        st.markdown(f"""
+                            <div style="display: flex; align-items: center;">
+                                <div style="display: flex;">
+                                    {''.join([colored_star for _ in range(num_yellow_stars)])}
+                                    {''.join([grayed_star for _ in range(num_grey_stars)])}
+                        """, unsafe_allow_html=True)
+                    with col6:
+                        st.markdown(f"""
+                            <div style="display: flex; align-items: center;">
+                                <h1 style="font-size: 25px; margin-right: 10px;">{int(value_s*100)}%</h1>
+                        """, unsafe_allow_html=True)
 
 
             # st.markdown(f"<div>{fa_star_svg}</div>", unsafe_allow_html=True)
