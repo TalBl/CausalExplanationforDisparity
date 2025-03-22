@@ -1,0 +1,71 @@
+ni_score_sum,utility,intersection_sum,final_intersection,score,row
+0.006569916,0.006569916,0,1,0.354270446,"subpopulation         {'MaritalStatus=Divorced', 'Age=51.00-63.00', ...
+treatment                                      (('CurrentlySmoke', 0),)
+cate1                                                           0.21456
+cate2                                                         -0.141455
+iscore                                                         0.356015
+size_subpopulation                                                  444
+size_group1                                                         139
+size_group2                                                         305
+support                                                        0.021934
+diff_means                                                     0.045312
+avg_group1                                                      0.47482
+avg_group2                                                     0.429508
+ni_score                                                       0.299538
+Name: 7, dtype: object"
+0.012757293,0.012757293,373,0.997952653,0.357575669,"subpopulation         {'Age=51.00-63.00', 'MaritalStatus=Divorced', ...
+treatment                                      (('CurrentlySmoke', 0),)
+cate1                                                          0.225467
+cate2                                                         -0.183696
+iscore                                                         0.409163
+size_subpopulation                                                  373
+size_group1                                                         126
+size_group2                                                         247
+support                                                        0.018426
+diff_means                                                     0.039265
+avg_group1                                                     0.460317
+avg_group2                                                     0.421053
+ni_score                                                       0.335794
+Name: 9, dtype: object"
+0.018599158,0.018599158,1024,0.994379401,0.360122243,"subpopulation         {'IsBornInUSA=1.0', 'MaritalStatus=Divorced', ...
+treatment                                      (('CurrentlySmoke', 0),)
+cate1                                                          0.271682
+cate2                                                         -0.130665
+iscore                                                         0.402348
+size_subpopulation                                                  357
+size_group1                                                         120
+size_group2                                                         237
+support                                                        0.017636
+diff_means                                                     0.044304
+avg_group1                                                          0.5
+avg_group2                                                     0.455696
+ni_score                                                       0.331252
+Name: 10, dtype: object"
+0.023589051,0.023589051,1906,0.989538222,0.36167126,"subpopulation         {'MaritalStatus=Divorced', 'Age=51.00-63.00', ...
+treatment                                      (('CurrentlySmoke', 0),)
+cate1                                                          0.256962
+cate2                                                         -0.163981
+iscore                                                         0.420943
+size_subpopulation                                                  294
+size_group1                                                         109
+size_group2                                                         185
+support                                                        0.014524
+diff_means                                                      0.03759
+avg_group1                                                     0.486239
+avg_group2                                                     0.448649
+ni_score                                                       0.343573
+Name: 14, dtype: object"
+0.025199893,0.025199893,1906,0.989538222,0.362718308,"subpopulation         {'IsBornInUSA=1.0', 'Region=Midwest', 'IsDiagn...
+treatment                                 (('HoldHealthInsurance', 1),)
+cate1                                                          0.206163
+cate2                                                          0.137443
+iscore                                                          0.06872
+size_subpopulation                                                  491
+size_group1                                                         238
+size_group2                                                         253
+support                                                        0.024255
+diff_means                                                     0.007889
+avg_group1                                                     0.466387
+avg_group2                                                     0.458498
+ni_score                                                       0.066412
+Name: 6, dtype: object"
