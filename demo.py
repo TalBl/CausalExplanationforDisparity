@@ -17,6 +17,10 @@ with open('demo/gpt_api_key.txt') as f:
 client = OpenAI(api_key=OPEN_AI_API_KEY)
 
 st.set_page_config(page_title="DisEx", layout='wide', initial_sidebar_state="expanded")
+
+with open( ".streamlit\style.css" ) as css:
+    st.markdown( f'<style>{css.read()}</style>' , unsafe_allow_html= True)
+
 st.markdown(
     """
     <style>
@@ -110,23 +114,31 @@ def create_colored_dot(s, min_value, max_value):
 
 def format_currency(value):
     return f"{round(float(value)*100, 2):,}%" # MEPS + ACS cases
-    return f"${int(value):,}"  # Convert to int, add thousand separators
+    # return f"${int(value):,}"  # Convert to int, add thousand separators
+
+def format_support(value):
+    size, support = value.split("+")
+    return f"{size}({support}%)" # MEPS + ACS cases
 
 def color_ate_cell(value, min_value, max_value):
-    # value = int(value.replace("$", "").replace(",", ""))
+    # Convert value to float after removing "%" or "," if present
     value = float(value.replace("%", "").replace(",", ""))
-    # rgb(139,0,0), rgb(255,255,255), rgb(0,128,0))
-    normalized = (value - min_value) / (max_value - min_value)
 
-    # When the value is in the middle, the color should be white
-    if normalized < 0.5:
-        r = int(255 - normalized * 510)  # Red decreases from 255 to 0
-        g = int(normalized * 510)  # Green increases from 0 to 255
+    # Normalize value to range [0, 1]
+    normalized = (value - min_value) / (max_value - min_value)  # Range [-100, 100] → [0, 1]
+
+    if normalized <= 0.5:
+        # Interpolate between red (139,0,0) and white (255,255,255)
+        factor = normalized * 2  # Scale range [0, 0.5] to [0,1]
+        r = int(139 + (255 - 139) * factor)
+        g = int(0 + (255 - 0) * factor)
+        b = int(0 + (255 - 0) * factor)
     else:
-        r = 0  # Red stays at 0
-        g = int((1 - normalized) * 510)  # Green decreases from 255 to 0
-
-    b = 100  # Fixed Blue
+        # Interpolate between white (255,255,255) and green (0,128,0)
+        factor = (normalized - 0.5) * 2  # Scale range [0.5, 1] to [0,1]
+        r = int(255 - (255 - 0) * factor)
+        g = int(255 - (255 - 128) * factor)
+        b = int(255 - (255 - 0) * factor)
 
     return f"background-color: rgb({r}, {g}, {b})"
 
@@ -226,9 +238,9 @@ with st.container():
 
         st.markdown(hide_file_limit_css, unsafe_allow_html=True)
         with _col1:
-            file_to_use = st.file_uploader(label="\n Upload your dataset", type=["csv"], key="dataset")
+            file_to_use = st.file_uploader(label="\n Upload dataset", type=["csv"], key="dataset")
         with _col2:
-            file_dag = st.file_uploader("Upload a causal DAG or we'll automatically discover one", type=["txt"], key="dag_file")
+            file_dag = st.file_uploader("Upload a causal DAG. If not, we'll discover one", type=["txt"], key="dag_file")
         # with _col3:
         #     st.button("Discover Causal DAG")
         # file_to_use = st.file_uploader(label="Upload your dataset", type=["csv"])
@@ -324,107 +336,107 @@ with st.container():
                 """,
                 unsafe_allow_html=True
             )
-            output_col = st.selectbox("Choose output attribute:", l)
-            if output_col:
-                if "Group_A" not in st.session_state:
-                    st.session_state.Group_A = []
-                if "Group_B" not in st.session_state:
-                    st.session_state.Group_B = []
+            if "Group_A" not in st.session_state:
+                st.session_state.Group_A = []
+            if "Group_B" not in st.session_state:
+                st.session_state.Group_B = []
 
-                def remove_condition(group, index):
-                    st.session_state[group].pop(index)
-                    on_conditions_changed(group)
+            def remove_condition(group, index):
+                st.session_state[group].pop(index)
+                on_conditions_changed(group)
 
                 # Function to add a new condition to a given group
-                def add_condition(group):
-                    st.session_state[group].append({"column": None, "operator": "=", "value": None})
-                    on_conditions_changed(group)
+            def add_condition(group):
+                st.session_state[group].append({"column": None, "operator": "=", "value": None})
+                on_conditions_changed(group)
 
-                def clear_all_conditions(group):
-                    while st.session_state[group]:
-                        st.session_state[group].pop()
-                    st.session_state[group] = []
-                    # st.rerun()
-                    on_conditions_changed(group)
+            def clear_all_conditions(group):
+                while st.session_state[group]:
+                    st.session_state[group].pop()
+                st.session_state[group] = []
+                # st.rerun()
+                on_conditions_changed(group)
 
-                def on_conditions_changed(group):
-                    st.write(f"🔄 **Conditions Updated for {group}**:")
-                with st.container(border=True):
-                    st.write("Group A")
-                    group_name = "Group_A"
-                    clear_all = st.checkbox(f"Overall dataset for {group_name}", key=f"clear_{group_name}")
-                    if st.session_state[f"clear_{group_name}"]:
-                        clear_all_conditions(group_name)
+            def on_conditions_changed(group):
+                st.write(f"🔄 **Conditions Updated for {group}**")
+            with st.container(border=True):
+                st.write("Group A")
+                group_name = "Group_A"
+                clear_all = st.checkbox(f"Full data for {group_name}", key=f"clear_{group_name}")
+                if st.session_state[f"clear_{group_name}"]:
+                    clear_all_conditions(group_name)
 
-                    # **Add Condition Button**
-                    if st.button(f"➕ Add Condition to {group_name}", key=f"add_{group_name}"):
-                        add_condition(group_name)
+                # **Add Condition Button**
+                if st.button(f"➕ Add Condition", key=f"add_{group_name}"):
+                    add_condition(group_name)
 
-                    # Display condition selections dynamically
-                    for i, condition in enumerate(st.session_state[group_name]):
-                        cols = st.columns([3, 2, 3, 1], vertical_alignment='bottom')  # Layout
+                # Display condition selections dynamically
+                for i, condition in enumerate(st.session_state[group_name]):
+                    cols = st.columns([3, 2, 3, 1], vertical_alignment='bottom')  # Layout
 
-                        # Column selection dropdown
-                        condition["column"] = cols[0].selectbox(
-                            "Column", df.columns, key=f"{group_name}_col_{i}",
-                            index=0 if condition["column"] is None else df.columns.get_loc(condition["column"])
+                    # Column selection dropdown
+                    condition["column"] = cols[0].selectbox(
+                        "Attribute", df.columns, key=f"{group_name}_col_{i}",
+                        index=0 if condition["column"] is None else df.columns.get_loc(condition["column"])
+                    )
+
+                    # Operator selection dropdown (= or !=)
+                    condition["operator"] = cols[1].selectbox(
+                        "Operator", ["=", "!="], key=f"{group_name}_op_{i}",
+                        index=["=", "!="].index(condition["operator"])
+                    )
+
+                    # Value selection dropdown (based on chosen column)
+                    if condition["column"]:
+                        unique_values = df[condition["column"]].unique().tolist()
+                        condition["value"] = cols[2].selectbox(
+                            "Value", unique_values, key=f"{group_name}_val_{i}"
                         )
 
-                        # Operator selection dropdown (= or !=)
-                        condition["operator"] = cols[1].selectbox(
-                            "Operator", ["=", "!="], key=f"{group_name}_op_{i}",
-                            index=["=", "!="].index(condition["operator"])
+                    # Remove condition button
+                    if cols[3].button("🗑️", key=f"del_{group_name}_{i}"):
+                        remove_condition(group_name, i)
+                        st.rerun()
+            with st.container(border=True):
+                st.write("Group B")
+                group_name = "Group_B"
+                clear_all = st.checkbox(f"Full data for {group_name}", key=f"clear_{group_name}")
+                if st.session_state[f"clear_{group_name}"]:
+                    clear_all_conditions(group_name)
+
+                # **Add Condition Button**
+                if st.button(f"➕ Add Condition", key=f"add_{group_name}"):
+                    add_condition(group_name)
+
+                # Display condition selections dynamically
+                for i, condition in enumerate(st.session_state[group_name]):
+                    cols = st.columns([3, 2, 3, 1], vertical_alignment='bottom')  # Layout
+
+                    # Column selection dropdown
+                    condition["column"] = cols[0].selectbox(
+                        "Attribute", df.columns, key=f"{group_name}_col_{i}",
+                        index=0 if condition["column"] is None else df.columns.get_loc(condition["column"])
+                    )
+
+                    # Operator selection dropdown (= or !=)
+                    condition["operator"] = cols[1].selectbox(
+                        "Operator", ["=", "!="], key=f"{group_name}_op_{i}",
+                        index=["=", "!="].index(condition["operator"])
+                    )
+
+                    # Value selection dropdown (based on chosen column)
+                    if condition["column"]:
+                        unique_values = df[condition["column"]].unique().tolist()
+                        condition["value"] = cols[2].selectbox(
+                            "Value", unique_values, key=f"{group_name}_val_{i}"
                         )
 
-                        # Value selection dropdown (based on chosen column)
-                        if condition["column"]:
-                            unique_values = df[condition["column"]].unique().tolist()
-                            condition["value"] = cols[2].selectbox(
-                                "Value", unique_values, key=f"{group_name}_val_{i}"
-                            )
-
-                        # Remove condition button
-                        if cols[3].button("🗑️", key=f"del_{group_name}_{i}"):
-                            remove_condition(group_name, i)
-                            st.rerun()
-                with st.container(border=True):
-                    st.write("Group B")
-                    group_name = "Group_B"
-                    clear_all = st.checkbox(f"Overall dataset for {group_name}", key=f"clear_{group_name}")
-                    if st.session_state[f"clear_{group_name}"]:
-                        clear_all_conditions(group_name)
-
-                    # **Add Condition Button**
-                    if st.button(f"➕ Add Condition to {group_name}", key=f"add_{group_name}"):
-                        add_condition(group_name)
-
-                    # Display condition selections dynamically
-                    for i, condition in enumerate(st.session_state[group_name]):
-                        cols = st.columns([3, 2, 3, 1], vertical_alignment='bottom')  # Layout
-
-                        # Column selection dropdown
-                        condition["column"] = cols[0].selectbox(
-                            "Column", df.columns, key=f"{group_name}_col_{i}",
-                            index=0 if condition["column"] is None else df.columns.get_loc(condition["column"])
-                        )
-
-                        # Operator selection dropdown (= or !=)
-                        condition["operator"] = cols[1].selectbox(
-                            "Operator", ["=", "!="], key=f"{group_name}_op_{i}",
-                            index=["=", "!="].index(condition["operator"])
-                        )
-
-                        # Value selection dropdown (based on chosen column)
-                        if condition["column"]:
-                            unique_values = df[condition["column"]].unique().tolist()
-                            condition["value"] = cols[2].selectbox(
-                                "Value", unique_values, key=f"{group_name}_val_{i}"
-                            )
-
-                        # Remove condition button
-                        if cols[3].button("🗑️", key=f"del_{group_name}_{i}"):
-                            remove_condition(group_name, i)
-                            st.rerun()
+                    # Remove condition button
+                    if cols[3].button("🗑️", key=f"del_{group_name}_{i}"):
+                        remove_condition(group_name, i)
+                        st.rerun()
+            if valid_group('Group_A') and valid_group('Group_B'):
+                output_col = st.selectbox("Choose target attribute", l)
                 # for group_name in ["Group_A", "Group_B"]:
                 #     with st.expander(f"{group_name.replace('_', ' ').title()}"):
                 #         clear_all = st.checkbox(f"Overall dataset for {group_name}", key=f"clear_{group_name}")
@@ -462,7 +474,6 @@ with st.container():
                 #             if cols[3].button("🗑️", key=f"del_{group_name}_{i}"):
                 #                 remove_condition(group_name, i)
                 #                 st.rerun()
-            if valid_group('Group_A') and valid_group('Group_B'):
                 cols = df.columns.tolist()
                 excluded_cols = ['group1', 'group2', output_col]
                 available_cols = [col for col in cols if col not in excluded_cols]
@@ -473,10 +484,10 @@ with st.container():
                 imutable_atts = st.multiselect("Select immutable attributes", available_cols, key=imutable_atts)
             if imutable_atts:
                 cols = df.columns.tolist()
-                mutable_atts = st.multiselect("Select attributes that are actionable", available_cols, key=mutable_atts)
+                mutable_atts = st.multiselect("Select actionable attributes", available_cols, key=mutable_atts)
             if mutable_atts:
                 options = [5, 10, 15, 20, 25, 30]
-                options2 = [0, 0.5, 1]
+                options2 = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
                 # Render a row of tick marks above the slider
                 value = st.select_slider("How many explanations do you want?", options=options)
                 st.markdown(
@@ -499,7 +510,7 @@ with st.container():
                         <span>5</span><span>10</span><span>15</span><span>20</span><span>25</span><span>30</span>
                     </div>
                     """, unsafe_allow_html=True)
-                value2 = st.select_slider("Balance parameter (Diversity - Utility)", options=options2, value=0.5)
+                alpha_balance = st.select_slider("Move the slider below to specify the balance between diversity and utility", options=options2, value=0.1)
                 st.markdown(
                     """
                     <style>
@@ -547,7 +558,7 @@ with st.container():
                 # k = st.slider("How many explanations do you want?", min_value=1, max_value=30, value=5, step=1)
                 col3, col4 = st.columns([1, 2], vertical_alignment='center')
                 with col3:
-                    st.html("<p style='font-size: 24px; color: black; text-align: center; margin-top: 10px;'>Choose filter scenario</p>")
+                    st.html("<p style='font-size: 24px; color: black; text-align: center; margin-top: 10px;'>Choose an explanation scenario</p>")
 
                     # st.write("Choose filter scenario")
                 with col4:
@@ -583,10 +594,8 @@ with st.container():
         if file_to_use and output_col and group1_query and group2_query and imutable_atts and mutable_atts and st.experimental_get_query_params().get("button_clicked"):
                 calc_algorithm()
     with col2:
-        with st.container():
+        with st.container(border=True):
             st.markdown("<h1 style='font-size:36px;'>Data</h1>", unsafe_allow_html=True)
-            if file_to_use and not output_col:
-                st.dataframe(df)
             if output_col and 'Group_A' not in st.session_state:
                 column_config = {
                     output_col: st.column_config.Column(
@@ -640,15 +649,24 @@ with st.container():
                     # calc alg
                     x = 1
                 with group_avg_col:
-                    group_a_avg = df[df.apply(lambda r: exists_group(r, st.session_state["Group_A"], st.session_state[f"clear_Group_A"]), axis=1)].loc[:, output_col].mean()
-                    group_b_avg = df[df.apply(lambda r: exists_group(r, st.session_state["Group_B"], st.session_state[f"clear_Group_B"]), axis=1)].loc[:, output_col].mean()
-                    st.write(f"**Average {'salary' if output_col == 'ConvertedSalary' else split_camel_case(output_col).lower()} for {group_a_text}:** {group_a_avg*100:.2f}\% \n  **Average {'salary' if output_col == 'ConvertedSalary' else split_camel_case(output_col).lower()} for {group_b_text}:** {group_b_avg*100:.2f}\%")
+                    if output_col:
+                        group_a_avg = df[df.apply(lambda r: exists_group(r, st.session_state["Group_A"], st.session_state[f"clear_Group_A"]), axis=1)].loc[:, output_col].mean()
+                        group_b_avg = df[df.apply(lambda r: exists_group(r, st.session_state["Group_B"], st.session_state[f"clear_Group_B"]), axis=1)].loc[:, output_col].mean()
+                        with st.container(border=True):
+                            st.markdown(f"""
+                                    <div style="display: flex; align-items: center;">
+                                        <h1 style="font-size: 18px; margin-right: 10px;">Average {'salary' if output_col == 'ConvertedSalary' else split_camel_case(output_col).lower()} for the selected groups</h1>
+                                """, unsafe_allow_html=True)
+                            # st.write(f"**Average {'salary' if output_col == 'ConvertedSalary' else split_camel_case(output_col).lower()} for the selected groups")
+                            st.write(f"**Average {'salary' if output_col == 'ConvertedSalary' else split_camel_case(output_col).lower()} for {group_a_text}:** {group_a_avg*100:.2f}\%")
+                            st.write(f"**Average {'salary' if output_col == 'ConvertedSalary' else split_camel_case(output_col).lower()} for {group_b_text}:** {group_b_avg*100:.2f}\%")
                     # st.write(f"**Average Group B:** {group_b_avg:.2f}")
-        with st.container():
-            if 'Group A' in st.session_state and 'Group B' in st.session_state:
+        with st.container(border=True):
+            if 'Group_A' in st.session_state and 'Group_B' in st.session_state:
                 st.markdown("<h1 style='font-size:36px;'>Causal Explanations</h1>", unsafe_allow_html=True)
                 df2 = pd.read_csv("demo/meps_5_0.65.csv")
-                df2["support"] = df2["support"].apply(create_pie_chart)
+                # df2["support"] = df2["support"].apply(create_pie_chart)
+                df2["support"] = df2["size_subpopulation"].apply(format_support)
                 df2['affect_group1'] = df2['ate1'] / df2['avg_group1']
                 df2['affect_group2'] = df2['ate2'] / df2['avg_group2']
                 #df2["ate_group1"] = df2["affect_group1"].apply(create_colored_dot)
@@ -723,43 +741,45 @@ with st.container():
                     """,
                     unsafe_allow_html=True
                 )
-                # st.dataframe(df3)
-                scores_df = pd.read_csv("demo/5_0.65.csv")
-                scores_df = scores_df[['utility', 'final_intersection', 'score']]
-                scores_df = scores_df.rename(columns={'utility': 'Utility', 'final_intersection': 'Diversity', 'score': 'Overall quality'})
-                scores_row = scores_df.iloc[-1].to_dict()
-                colored_star = """
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" width="31.9727px" height="35.5859px" fill='yellow'>
-                  <path fill='#F6DC43' d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z" fill="gray"/>
-                </svg>
-                """
-                grayed_star = """
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" width="31.9727px" height="35.5859px" fill='yellow'>
-                  <path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z" fill="gray"/>
-                </svg>
-                """
-                for i,score in enumerate(['Overall quality', 'Diversity', 'Utility']):
-                    col4, col5, col6 = st.columns([1,1,1], vertical_alignment='center')
-                    value_s = scores_row[score]
-                    num_yellow_stars = math.ceil(value_s / 0.2)
-                    num_grey_stars = 5 - num_yellow_stars
-                    with col4:
-                        st.markdown(f"""
-                            <div style="display: flex; align-items: center;">
-                                <h1 style="font-size: 25px; margin-right: 10px;">{score}</h1>
-                        """, unsafe_allow_html=True)
-                    with col5:
-                        st.markdown(f"""
-                            <div style="display: flex; align-items: center;">
-                                <div style="display: flex;">
-                                    {''.join([colored_star for _ in range(num_yellow_stars)])}
-                                    {''.join([grayed_star for _ in range(num_grey_stars)])}
-                        """, unsafe_allow_html=True)
-                    with col6:
-                        st.markdown(f"""
-                            <div style="display: flex; align-items: center;">
-                                <h1 style="font-size: 25px; margin-right: 10px;">{int(value_s*100)}%</h1>
-                        """, unsafe_allow_html=True)
+                with st.container():
+                    # st.dataframe(df3)
+                    scores_df = pd.read_csv("demo/5_0.65.csv")
+                    scores_df = scores_df[['utility', 'final_intersection', 'score']]
+                    scores_df = scores_df.rename(columns={'utility': 'Utility', 'final_intersection': 'Diversity', 'score': 'Overall quality'})
+                    scores_row = scores_df.iloc[-1].to_dict()
+                    colored_star = """
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" width="31.9727px" height="35.5859px" fill='yellow'>
+                      <path fill='#F6DC43' d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z" fill="gray"/>
+                    </svg>
+                    """
+                    grayed_star = """
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" width="31.9727px" height="35.5859px" fill='yellow'>
+                      <path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z" fill="gray"/>
+                    </svg>
+                    """
+                    scores_row['Overall quality'] = alpha_balance*scores_row['Utility'] + (1-alpha_balance)*scores_row['Diversity']
+                    for i,score in enumerate(['Overall quality', 'Diversity', 'Utility']):
+                        col4, col5, col6 = st.columns([1,1,1], vertical_alignment='center')
+                        value_s = scores_row[score]
+                        num_yellow_stars = math.ceil(value_s / 0.2)
+                        num_grey_stars = 5 - num_yellow_stars
+                        with col4:
+                            st.markdown(f"""
+                                <div style="display: flex; align-items: center;">
+                                    <h1 style="font-size: 15px; margin-right: 10px;">{score}</h1>
+                            """, unsafe_allow_html=True)
+                        with col5:
+                            st.markdown(f"""
+                                <div style="display: flex; align-items: center;">
+                                    <div style="display: flex;">
+                                        {''.join([colored_star for _ in range(num_yellow_stars)])}
+                                        {''.join([grayed_star for _ in range(num_grey_stars)])}
+                            """, unsafe_allow_html=True)
+                        with col6:
+                            st.markdown(f"""
+                                <div style="display: flex; align-items: center;">
+                                    <h1 style="font-size: 15px; margin-right: 10px;">{int(value_s*100)}%</h1>
+                            """, unsafe_allow_html=True)
 
 
             # st.markdown(f"<div>{fa_star_svg}</div>", unsafe_allow_html=True)
