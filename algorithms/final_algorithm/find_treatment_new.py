@@ -11,6 +11,7 @@ import warnings
 from Utils import Dataset
 import itertools
 import logging
+import re
 logger = logging.getLogger(__name__)
 
 
@@ -25,7 +26,8 @@ def changeDAG(dag, treatments):
             a = "DevType"
         for c in DAG:
             if '->' in c:
-                if a in c:
+                words_only = [re.sub(r'[^\w\s]', '', x).replace('\n', '') for x in c.split((" -> "))]
+                if a in words_only:
                     toRomove.append(c)
                     # left hand side
                     if a in c.split(" ->")[0]:
@@ -44,45 +46,64 @@ def changeDAG(dag, treatments):
 def calc_causal_graph_per_treatment(df, GRAPH, d, treatment):
     DAG_ = changeDAG(GRAPH, [treatment])
     edges = []
+    found = False
     for line in DAG_:
         if '->' in line:
+            if not found and "TempTreatment ->" in line:
+                found = True
             if line[0] == '"':
                 edges.append([line.split(" ->")[0].split('"')[1], line.split("-> ")[1].split(';"')[0]])
             else:
                 if line[0] == "'":
                     edges.append([line.split(" ->")[0].split("'")[1], line.split("-> ")[1].split(";'")[0]])
+    if not found:
+        return
     causal_graph = nx.DiGraph()
     causal_graph.add_edges_from(edges)
     df_group = df.copy()
     if 'DevType' == treatment:
-        treatment_value = 1
-        df_group['TempTreatment'] = df_group["DevType_Systemadministrator"].apply(lambda x: 1 if x and x == treatment_value else 0)
-    else:
-        treatment_value = list(df_group[treatment].dropna().unique())[0]
-        df_group['TempTreatment'] = df_group[treatment].apply(lambda x: 1 if x and x == treatment_value else 0)
-    try:
-        model = CausalModel(
-            data=df_group,
-            graph=causal_graph,
-            treatment="TempTreatment",
-            outcome=d.outcome_col)
-        estimands = model.identify_effect()
-    except Exception as e:
-        raise e
-    if not estimands.no_directed_path:
-        with open(f"data/{d.name}/causal_dags_files/{treatment}.pkl", 'wb') as file:
-            pickle.dump(causal_graph, file)
+        treatment = "DevType_Systemadministrator"
+    for val in list(df_group[treatment].dropna().unique()):
+        df_group['TempTreatment'] = df_group[treatment].apply(lambda x: 1 if x and x == val else 0)
+        try:
+            model = CausalModel(
+                data=df_group,
+                graph=causal_graph,
+                treatment="TempTreatment",
+                outcome=d.outcome_col)
+            estimands = model.identify_effect()
+        except Exception as e:
+            raise e
+        if not estimands.no_directed_path:
+            with open(f"data/{d.name}/causal_dags_files/{treatment}.pkl", 'wb') as file:
+                pickle.dump(causal_graph, file)
+                return
+import os
 
+def remove_all_files_in_dir(directory):
+    for filename in os.listdir(directory):
+        file_path = os.path.join(directory, filename)
+        try:
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+        except Exception as e:
+            print(f"Failed to delete {file_path}: {e}")
 
 def write_pickle_files(d: Dataset):
+    remove_all_files_in_dir(f"data/{d.name}/causal_dags_files")
     df = pd.read_csv(d.clean_path)
-    with open(f"data/{d.name}/causal_dag.txt", "r") as f:
+    with open(f"{d.dag_file}", "r") as f:
         graph = f.readlines()
+    cleaned_treats = []
     for t in d.treatments_atts:
         try:
             calc_causal_graph_per_treatment(df, graph, d, t)
         except Exception as e:
             print("fail")
+        if os.path.isfile(f"data/{d.name}/causal_dags_files/{t}.pkl"):
+            cleaned_treats.append(t)
+    d.treatments_atts = cleaned_treats
+
 
 
 def GenChildren(d: Dataset):
@@ -278,7 +299,7 @@ def run_subpopulations(d):
     p_value_threshold = 0.05 if d.name != "meps" else 0.1
     subpopulations = list(pd.read_csv(f"outputs/{d.name}/interesting_subpopulations.csv")['itemset'])
     results = {}
-    with open(f"data/{d.name}/causal_dag.txt", "r") as f:
+    with open(f"{d.dag_file}", "r") as f:
         dag = f.readlines()
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         future_to_item = {executor.submit(findBestTreatment, s, d.copy(), dag, p_value_threshold): s for s in subpopulations}

@@ -81,7 +81,8 @@ meps = Dataset(name="meps", outcome_col="FeltNervous",
                subpopulations=['MaritalStatus', 'Region', 'Race', 'Age',
                                'IsDiagnosedAsthma', 'IsBornInUSA', 'DoesDoctorRecommendExercise'],
                columns_to_ignore=[], clean_path="outputs/meps/clean_data.csv",
-               func_filter_subs=meps_filter_facts, func_filter_treats=meps_filter_facts, need_filter_subpopulations=True, need_filter_treatments=True)
+               func_filter_subs=meps_filter_facts, func_filter_treats=meps_filter_facts, need_filter_subpopulations=True, need_filter_treatments=True,
+               dag_file="outputs/dags/causal_graph_lingam_meps.dot")
 so = Dataset(name="so", outcome_col="ConvertedSalary",
                treatments=['YearsCodingProf', 'Hobby', 'FormalEducation', 'WakeTime', 'HopeFiveYears'],
                subpopulations=['Gender', 'Age', 'RaceEthnicity_BlackorofAfricandescent', 'RaceEthnicity_EastAsian',
@@ -92,24 +93,25 @@ so = Dataset(name="so", outcome_col="ConvertedSalary",
                                   'RaceEthnicity_HispanicorLatino/Latina=0', 'RaceEthnicity_MiddleEastern=0',
                                   'RaceEthnicity_NativeAmerican,PacificIslander,orIndigenousAustralian=0',
                                   'RaceEthnicity_SouthAsian=0', 'RaceEthnicity_WhiteorofEuropeandescent=0'],
-             clean_path="outputs/so/clean_data.csv", func_filter_subs=so_filter_facts, func_filter_treats=so_filter_facts, need_filter_subpopulations=True, need_filter_treatments=True)
+             clean_path="outputs/so/clean_data.csv", func_filter_subs=so_filter_facts, func_filter_treats=so_filter_facts, need_filter_subpopulations=True, need_filter_treatments=True,
+             dag_file="outputs/dags/causal_graph_fci_so.dot")
 acs = Dataset(name="acs", outcome_col="Health insurance coverage recode",
               treatments=['Temporary absence from work', 'Worked last week',
-                          'Widowed in the past 12 months', "Total person's earnings",
+                          'Widowed in the past 12 months', "Total person earnings",
                           'Educational attainment', 'Georgraphic division'],
               subpopulations=['Sex', 'Age', 'With a disability', "Race/Ethnicity",
                               'Region', 'Language other than English spoken at home', 'state code',
                               'Marital status', 'Nativity', 'Related child'],
               columns_to_ignore=[], clean_path="outputs/acs/clean_data.csv", func_filter_subs=acs_filter_subs, need_filter_subpopulations=True, need_filter_treatments=True,
-              func_filter_treats=acs_filter_treats)
+              func_filter_treats=acs_filter_treats, dag_file="outputs/dags/causal_graph_fci_acs.dot")
 import json
 
-r=algorithm(D=so)
-with open("res_so.json", "w") as f:
-    json.dump(r, f)
 r=algorithm(D=meps)
-with open("res_meps.json", "w") as f:
-    json.dump(r, f)
-r = algorithm(D=acs)
-with open("res_acs.json", "w") as f:
-    json.dump(r, f)
+# with open("res_so.json", "w") as f:
+#     json.dump(r, f)
+# r=algorithm(D=so)
+# with open("res_meps.json", "w") as f:
+#     json.dump(r, f)
+# r = algorithm(D=acs)
+# with open("res_acs.json", "w") as f:
+#     json.dump(r, f)
