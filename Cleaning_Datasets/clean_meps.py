@@ -17,6 +17,8 @@ column_mappings = {
     "ASPRIN53": {1: 1, 2: 0},
     "MIDX": {1: 1, 2: 0, -1: None, -7: None, -8: None, -9: None},
     "ASTHDX": {1: 1, 2: 0, -1: None, -7: None, -8: None, -9: None},
+    "ADHDADDX": {1: 1, 2: 0, -1: None, -7: None, -8: None, -9: None},
+    "CANCERDX": {1: 1, 2: 0, -1: None, -7: None, -8: None, -9: None},
     "EMPST53": {1: "ActivelyWorking", 2: "NotCurrentlyWorkingButHasAJob", 3: "WorkedAtSomePointDuringTheYear", 4: "NotEmployed",
                 -7: "UnAcceptable", -8: "UnAcceptable", -9: "UnAcceptable"},
     "DIABDX": {1: 1, 2: 0, -1: None, -7: None, -8: None, -9: None},
@@ -67,19 +69,54 @@ def build_mini_df():
     df["IsDiagnosedCancer"] = df["CANCERDX"]
     df["IsDiagnosedDiabetes"] = df["DIABDX"]
     df["IsDiagnosedAsthma"] = df["ASTHDX"]
-    df["LongSinceLastFluVaccination"] = df["FLUSHT53"]
-    df["TakesAspirinFrequently"] = df["ASPRIN53"]
-    df["WearsSeatBelt"] = df["SEATBE53"]
+    flu_map = {
+        -7: None,
+        -8: None,
+        -9: None,
+        1: "In the past year",
+        2: "1–2 years ago",
+        3: "2–3 years ago",
+        4: "More than 3 years ago",
+        5: "Never had flu shot"
+    }
+    df["LongSinceLastFluVaccination"] = df["FLUSHT53"].map(flu_map)
+    aspirin_map = {
+        -7: None,
+        -8: None,
+        -9: None,
+        1: "Daily",
+        2: "Every other day",
+        3: "Once or twice a week",
+        4: "Less than once a week",
+        5: "Not at all"
+    }
+    df["TakesAspirinFrequently"] = df["ASPRIN53"]#.map(aspirin_map)
+    seatbelt_map = {
+        -7: None,
+        -8: None,
+        -9: None,
+        1: "Always",
+        2: "Nearly always",
+        3: "Sometimes",
+        4: "Seldom",
+        5: "Never"
+    }
+    df["WearsSeatBelt"] = df["SEATBE53"].map(seatbelt_map)
 
-    df = df.dropna()
     """df = df[['group1', 'group2', 'BMI', 'Age', 'Region', 'MaritalStatus', 'Student', 'Race', 'Education', 'FamilyIncomeWage',
                'IsHadHeartAttack', 'IsHadStroke', 'IsDiagnosedCancer', 'IsADHD/ADD_Diagnisos',
                 'IsDiagnosedAsthma', 'IsBornInUSA',
                'DoesDoctorRecommendExercise', 'LongSinceLastFluVaccination', 'TakesAspirinFrequently', 'Exercise',
                'WearsSeatBelt', 'FeltNervous', 'HoldHealthInsurance', 'IsWorking', 'CurrentlySmoke', 'IsDiagnosedDiabetes', 'HowOftenCheckInDoctor']]"""
-    df = df[['group1', 'group2', 'MaritalStatus', 'Region', 'Race', 'Education', 'Age', 'HoldHealthInsurance', 'FeltNervous', 'Student',
-             'IsDiagnosedAsthma', 'IsBornInUSA', 'IsWorking', 'DoesDoctorRecommendExercise', 'Exercise', 'CurrentlySmoke',
-             'TakesAspirinFrequently']]
+    df = df[['group1', 'group2', 'MaritalStatus', 'Region', 'Race', 'Education', 'Age', 'HoldHealthInsurance', 'Student',
+             'IsDiagnosedAsthma', 'IsDiagnosedDiabetes', 'IsDiagnosedCancer', 'IsBornInUSA', 'IsWorking', 'DoesDoctorRecommendExercise', 'Exercise', 'CurrentlySmoke',
+             'LongSinceLastFluVaccination', 'WearsSeatBelt', 'TakesAspirinFrequently', 'FeltNervous']]
+
+    """treatments=['Exercise', 'CurrentlySmoke', 'HoldHealthInsurance', 'Student', 'IsWorking',
+                           'LongSinceLastFluVaccination', 'WearsSeatBelt', 'TakesAspirinFrequently'],
+               subpopulations=['MaritalStatus', 'Region', 'Race', 'Age', 'IsDiagnosedDiabetes', 'Education', 'IsDiagnosedDiabetes',
+                               'IsDiagnosedAsthma', 'IsBornInUSA', 'DoesDoctorRecommendExercise', 'IsDiagnosedCancer'],"""
+    df = df.dropna()
     df = df.loc[(df["group1"] == 1) | (df["group2"] == 1)]
     df = df.loc[df['FeltNervous']>=0]
     for column in ['Age']:

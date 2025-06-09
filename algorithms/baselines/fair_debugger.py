@@ -5,8 +5,12 @@ import numpy as np
 import pandas as pd
 import ast
 import pickle
+from tqdm import tqdm
+import networkx as nx
+
+import csv
 from sklearn.model_selection import train_test_split
-from algorithms.final_algorithm.new_greedy import get_intersection, ni_score
+from algorithms.final_algorithm.new_greedy import get_intersection, ni_score, get_union, print_matrix
 from algorithms.final_algorithm.find_treatment_new import findBestTreatment, get_subpopulation
 from algorithms.debug_RF.DebugRF import Dataset_RF, FairnessMetric, FairnessDebuggingUsingMachineUnlearning
 from algorithms.final_algorithm.find_treatment_new import changeDAG, getTreatmentATE
@@ -16,9 +20,10 @@ from cleaning_datasets.clean_meps import filter_facts as meps_filter_facts
 from Utils import Dataset, choose_lamda
 import itertools
 
-THRESHOLD_SUPPORT = 0.05
-ALPHA = 0.65
+THRESHOLD_SUPPORT = 0.01
+ALPHA = 0.5
 K = 5
+THRESHOLD = 0.25
 
 
 '''Class for loading and preprocessing german credits dataset'''
@@ -109,7 +114,7 @@ class MEPSDataset(Dataset_RF):
                                                        'NeverMarried': 4}).astype(int, errors='ignore')
         df['Region'] = df['Region'].map({'West': 0, 'Midwest': 1, 'South': 2, 'Northeast': 3, "-1": -1}).astype(int, errors='ignore')
         df['Race'] = df['Race'].map({'White': 0, 'Black': 1, 'MultipleRaces': 2, ' Indian/Alaska': 3, 'Asian/Hawaiian/PacificIls': 4}).astype(int, errors='ignore')
-        df['IsWorking'] = df['IsWorking'].map({'UnAcceptable': 0, 'WorkedAtSomePointDuringTheYear': 1, 'NotCurrentlyWorkingButHasAJob': 2, 'ActivelyWorking': 3, 'NotEmployed': 4, "-1": -1}).astype(int, errors='ignore')
+        # df['IsWorking'] = df['IsWorking'].map({'UnAcceptable': 0, 'WorkedAtSomePointDuringTheYear': 1, 'NotCurrentlyWorkingButHasAJob': 2, 'ActivelyWorking': 3, 'NotEmployed': 4, "-1": -1}).astype(int, errors='ignore')
         df['FeltNervous'] = df['FeltNervous'].astype(int, errors='ignore')
         '''Moving outcome column at the end'''
         cols = list(df.columns.values)
@@ -168,7 +173,6 @@ class ACSDataset(Dataset_RF):
 
     def __preprocessDataset(self, dataset):
         df = copy.deepcopy(dataset)
-        df['Sex'] = df['Sex'].map({'Man': 0, "Woman": 1}).astype(int, errors='ignore')
         df['Age'] = df['Age'].map({'<17.00': 0, "17.00-34.00": 1, "34.00-50.00": 2, "50.00-64.00": 3, ">64.00": 4}).astype(int, errors='ignore')
         df['With a disability'] = df['With a disability'].map({'no': 0, "yes": 1}).astype(int, errors='ignore')
         # df['School enrollment'] = df['School enrollment'].map({'No, has not attended in the last 3 months': 0, 'Yes, private school, private college, or home school': 1,
@@ -241,6 +245,22 @@ def CalcIScore(treats: set, d: Dataset, dag, size, df_group1, df_group2, p_value
     try:
         if size - 1 >= 1:
             dag = changeDAG(dag, [x[0] for x in treats])
+            edges = []
+            found = False
+            for line in dag:
+                if '->' in line:
+                    if not found and "TempTreatment ->" in line:
+                        found = True
+                    if line[0] == '"':
+                        edges.append([line.split(" ->")[0].split('"')[1], line.split("-> ")[1].split(';"')[0]])
+                    else:
+                        if line[0] == "'":
+                            edges.append([line.split(" ->")[0].split("'")[1], line.split("-> ")[1].split(";'")[0]])
+            if not found:
+                return
+            causal_graph = nx.DiGraph()
+            causal_graph.add_edges_from(edges)
+            dag = causal_graph
         else:
             treatment_att_file_name = list(treats)[0][0]
             if treatment_att_file_name.startswith('DevType'):
@@ -257,22 +277,33 @@ def CalcIScore(treats: set, d: Dataset, dag, size, df_group1, df_group2, p_value
     except Exception as e:
         print(e)
 
-
-def get_score(group, alpha, d, N, L):
-    intersection = 0
+def get_score(group, d, calc_intersection, calc_union, max_outcome):
     g = []
-    ni_score_sum = 0
-    for _, row in group.iterrows():
+    iscore = 0
+    for _, row in group:
         g.append(row)
-        if row["ni_score"]:
-            ni_score_sum += row['ni_score'] * row['support']
-    utility = ni_score_sum
+        iscore += row['iscore'] / max_outcome
     for row1, row2 in itertools.combinations(g, 2):
-        intersection += get_intersection(row1, row2, d, {})
-    f_intersection = ((N*L*L) - intersection) / (N*L*L)
-    score = (alpha * utility) + ((1 - alpha) * f_intersection)
-    return {"ni_score_sum": ni_score_sum, "utility": utility, "intersection_sum": intersection,
-            "final_intersection": f_intersection, "score": score}
+        intersection = get_intersection(row1, row2, d, calc_intersection)
+        union = get_union(row1, row2, d, calc_union)
+        jaccard = intersection / union
+        if jaccard > THRESHOLD:
+            return {"score": 0}
+    return {"score": iscore}
+
+
+def run_search(d, k, df_treatments, calc_intersection, calc_union, max_outcome):
+    max_score = 0
+    for group in tqdm(itertools.combinations(df_treatments.iterrows(), k)):
+        scores = get_score(group=group, d=d, calc_intersection=calc_intersection, calc_union=calc_union, max_outcome=max_outcome)
+        if scores["score"] > max_score:
+            max_score = scores["score"]
+            res_group = group
+            scores_dict = scores
+    if max_score > 0:
+        return max_score, res_group, scores_dict
+    else:
+        return 0, [], {}
 
 
 def parse_subpoplation(df_original, sub_str):
@@ -299,6 +330,7 @@ def parse_subpoplation(df_original, sub_str):
 def baseline(d: Dataset):
     df = pd.read_csv(d.clean_path)
     N = df.shape[0]
+    max_outcome = max(df[d.outcome_col])
     with open(f"data/{d.name}/causal_dag.txt", "r") as f:
         lines = f.readlines()
     p_value_threshold = 0.05 if d.name != "meps" else 0.1
@@ -351,8 +383,8 @@ def baseline(d: Dataset):
     # print(bias_inducing_subsets)
     # bias_inducing_subsets.sort_values(by=["Parity_Reduction","Size"], ascending=[False, False], ignore_index=True)\
     #     .to_csv(f"outputs/{d.name}/baselines/facts_rf.csv", index=False)
-    if d.name == "acs":
-        d.clean_path = d.clean_path.replace("sample", "clean")
+    # if d.name == "acs":
+    #     d.clean_path = d.clean_path.replace("sample", "clean")
     df_facts = pd.read_csv(f"outputs/{d.name}/baselines/facts_rf.csv")
     df = pd.read_csv(d.clean_path)
     L = df_facts.shape[0]
@@ -375,39 +407,57 @@ def baseline(d: Dataset):
                         "diff_means": diff_means, "avg_group1": np.mean(group1[d.outcome_col]),
                         "avg_group2": np.mean(group2[d.outcome_col]), "size": size, "support": support})
     df = pd.DataFrame(res)
-    df_clean = pd.read_csv(d.clean_path)
-    lamda = choose_lamda(df_clean[d.outcome_col])
-    df['ni_score'] = df['iscore'].apply(lambda x: ni_score(x, lamda) if x else None)
-    df = df.sort_values(by=['ni_score', 'support'], ascending=(False, False)).head(K)
-    df.to_csv(f'outputs/{d.name}/baselines/facts_final_rf.csv', index=False)
-    scores = get_score(group=df, alpha=ALPHA, d=d, N=N, L=L)
-    pd.DataFrame([scores]).to_csv(f'outputs/{d.name}/baselines/rf_scores.csv')
+    df = df.loc[df['iscore'].notnull()]
+    res_group = []
+    k = K
+    calc_intersection, calc_union, scores_dict = {}, {}, {}
+    while res_group == [] and k > 0:
+        max_score, res_group, scores_dict = run_search(d, k, df, calc_intersection, calc_union, max_outcome)
+        k -= 1
+    g = []
+    for x in res_group:
+        _, row = x
+        g.append(row)
+    jaccard_matrix = print_matrix(d, calc_intersection, calc_union, [x['subpopulation'] for x in g])
+    jaccard_matrix.to_csv(f"outputs/{d.name}/baselines/rf_jaccard_matrix.csv", quoting=csv.QUOTE_NONNUMERIC)
+    pd.DataFrame(g).to_csv(f'outputs/{d.name}/baselines/facts_final_rf.csv', index=False)
+    pd.DataFrame([scores_dict]).to_csv(f'outputs/{d.name}/baselines/rf_scores.csv', index=False)
 
 
-meps = Dataset(name="meps", outcome_col="FeltNervous",
-               treatments=['Exercise', 'CurrentlySmoke', 'HoldHealthInsurance', 'Student', 'IsWorking'],
-               subpopulations=['MaritalStatus', 'Region', 'Race', 'IsWorking'],
-               columns_to_ignore=[], clean_path="outputs/meps/clean_data.csv",
-               func_filter_subs=meps_filter_facts, func_filter_treats=meps_filter_facts, need_filter_subpopulations=True, need_filter_treatments=True)
-so = Dataset(name="so", outcome_col="ConvertedSalary",
-             treatments=['YearsCodingProf', 'Hobby', 'FormalEducation', 'WakeTime', 'DevType'],
-             subpopulations=['Gender', 'Age', 'RaceEthnicity_BlackorofAfricandescent', 'RaceEthnicity_EastAsian',
-                             'RaceEthnicity_HispanicorLatino/Latina', 'RaceEthnicity_MiddleEastern',
-                             'RaceEthnicity_NativeAmerican,PacificIslander,orIndigenousAustralian',
-                             'RaceEthnicity_SouthAsian', 'RaceEthnicity_WhiteorofEuropeandescent'],
-             columns_to_ignore=['RaceEthnicity_BlackorofAfricandescent=0', 'RaceEthnicity_EastAsian=0',
-                                'RaceEthnicity_HispanicorLatino/Latina=0', 'RaceEthnicity_MiddleEastern=0',
-                                'RaceEthnicity_NativeAmerican,PacificIslander,orIndigenousAustralian=0',
-                                'RaceEthnicity_SouthAsian=0', 'RaceEthnicity_WhiteorofEuropeandescent=0'],
-             clean_path="outputs/so/clean_data.csv", func_filter_subs=so_filter_facts, func_filter_treats=so_filter_facts, need_filter_subpopulations=True, need_filter_treatments=True)
-acs = Dataset(name="acs", outcome_col="Health insurance coverage recode",
-              treatments=['Temporary absence from work', 'Worked last week', "person weight",
-                          'Widowed in the past 12 months', "Total person's earnings",
-                          'Educational attainment', 'Georgraphic division'],
-              subpopulations=['Sex', 'Age', 'With a disability', 'Region'],
-              columns_to_ignore=[], clean_path="outputs/acs/clean_data.csv", func_filter_subs=acs_filter_subs, need_filter_subpopulations=True, need_filter_treatments=True,
-              func_filter_treats=acs_filter_treats)
-
+# meps = Dataset(name="meps", outcome_col="FeltNervous",
+#                treatments=['Exercise', 'CurrentlySmoke', 'HoldHealthInsurance', 'Student', 'IsWorking'],
+#                subpopulations=['MaritalStatus', 'Region', 'Race', 'IsWorking'],
+#                columns_to_ignore=[], clean_path="outputs/meps/clean_data.csv",
+#                func_filter_subs=meps_filter_facts, func_filter_treats=meps_filter_facts, need_filter_subpopulations=True, need_filter_treatments=True,
+#                dag_file="data/meps/causal_dag.txt")
+# so = Dataset(name="so", outcome_col="ConvertedSalary",
+#              treatments=['YearsCodingProf', 'Hobby', 'FormalEducation', 'WakeTime', 'DevType'],
+#              subpopulations=['Gender', 'Age', 'RaceEthnicity_BlackorofAfricandescent', 'RaceEthnicity_EastAsian',
+#                              'RaceEthnicity_HispanicorLatino/Latina', 'RaceEthnicity_MiddleEastern',
+#                              'RaceEthnicity_NativeAmerican,PacificIslander,orIndigenousAustralian',
+#                              'RaceEthnicity_SouthAsian', 'RaceEthnicity_WhiteorofEuropeandescent'],
+#              columns_to_ignore=['RaceEthnicity_BlackorofAfricandescent=0', 'RaceEthnicity_EastAsian=0',
+#                                 'RaceEthnicity_HispanicorLatino/Latina=0', 'RaceEthnicity_MiddleEastern=0',
+#                                 'RaceEthnicity_NativeAmerican,PacificIslander,orIndigenousAustralian=0',
+#                                 'RaceEthnicity_SouthAsian=0', 'RaceEthnicity_WhiteorofEuropeandescent=0'],
+#              clean_path="outputs/so/clean_data.csv", func_filter_subs=so_filter_facts, func_filter_treats=so_filter_facts, need_filter_subpopulations=True, need_filter_treatments=True,
+#              dag_file="data/so/causal_dag.txt")
+# acs = Dataset(name="acs", outcome_col="Health insurance coverage recode",
+#               treatments=['Temporary absence from work', 'Worked last week',
+#                           'Widowed in the past 12 months', "Total person earnings",
+#                           'Educational attainment'],
+#               subpopulations=['Age', 'With a disability', 'Region'],
+#               columns_to_ignore=[], clean_path="outputs/acs/clean_data.csv", func_filter_subs=acs_filter_subs, need_filter_subpopulations=True, need_filter_treatments=True,
+#               func_filter_treats=acs_filter_treats, dag_file="data/acs/causal_dag.txt")
+from algorithms.final_algorithm.full import acs, so, meps
+import time
+start = time.time()
 baseline(so)
+e1 = time.time()
+print(f"so took {e1-start}")
 baseline(meps)
+e2 = time.time()
+print(f"meps took {e2-e1}")
 baseline(acs)
+e3 = time.time()
+print(f"acs took {e3-e2}")

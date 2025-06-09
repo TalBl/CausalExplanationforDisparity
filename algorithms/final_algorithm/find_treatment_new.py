@@ -233,7 +233,7 @@ def get_subpopulation(df, s):
 
 
 def findBestTreatment(subpopulation_str, d: Dataset, dag, p_value):
-    max_workers = 100 if d.name == "acs" else None
+    max_workers = 4 if d.name == "acs" else None
     df = pd.read_csv(d.clean_path)
     if subpopulation_str != "":
         subpopulation = get_subpopulation(df, subpopulation_str)
@@ -295,7 +295,7 @@ def findBestTreatment(subpopulation_str, d: Dataset, dag, p_value):
 
 
 def run_subpopulations(d):
-    max_workers = 10 if d.name == "acs" else None
+    max_workers = 4
     p_value_threshold = 0.05 if d.name != "meps" else 0.1
     subpopulations = list(pd.read_csv(f"outputs/{d.name}/interesting_subpopulations.csv")['itemset'])
     results = {}

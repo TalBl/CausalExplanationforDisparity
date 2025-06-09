@@ -39,3 +39,7 @@
 'SalaryType -> ConvertedSalary;',
 'HopeFiveYears -> ConvertedSalary;',
 'JobSatisfaction -> ConvertedSalary;',
+'EducationParents -> Dependents;',
+'YearsCodingProf -> HoursComputer;',
+'FormalEducation -> UndergradMajor;',
+'ConvertedSalary -> CompanySize;',
