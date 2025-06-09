@@ -1,6 +1,0 @@
-subpopulation,treatment,ate1,ate2,delta,cate,size_subpopulation,size_group1,size_group2,support,ni_score,avg_group1,avg_group2
-{'Age=25 - 34 years old'},"(('HopeFiveYears', 'Doing the same work'), ('YearsCodingProf', '6-8 years'))",90389.9121,16929.7765,73460.13561,73460.13561,23888,1905,14495,0.319462496,0.036063702,96984.64199,93119.99869
-{'RaceEthnicity_WhiteorofEuropeandescent=1'},"(('YearsCodingProf', '24-26 years'),)",87039.7783,63673.30672,23366.47158,23366.47158,32049,2770,19540,0.430778584,0.011615252,122765.9986,108953.62
-"{'RaceEthnicity_WhiteorofEuropeandescent=1', 'Gender=Male'}","(('YearsCodingProf', '24-26 years'),)",89048.9465,64959.88276,24089.06374,24089.06374,29514,2543,18286,0.402163431,0.011972287,122605.9237,109707.6141
-"{'RaceEthnicity_WhiteorofEuropeandescent=1', 'Age=25 - 34 years old'}","(('YearsCodingProf', '6-8 years'),)",44513.95992,11687.07229,32826.88763,32826.88763,16523,1304,10026,0.22145822,0.016279477,115777.5169,105988.6308
-"{'RaceEthnicity_WhiteorofEuropeandescent=1', 'Age=25 - 34 years old', 'Gender=Male'}","(('YearsCodingProf', '6-8 years'),)",42184.76339,10520.1277,31664.63568,31664.63568,15111,1177,9341,0.205609828,0.015707646,117247.7154,107115.241
