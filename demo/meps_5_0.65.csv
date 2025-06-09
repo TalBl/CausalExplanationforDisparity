@@ -1,6 +1,3 @@
-subpopulation,treatment,ate1,ate2,iscore,size_subpopulation,size_group1,size_group2,support,diff_means,avg_group1,avg_group2,ni_score
-"{'MaritalStatus=Divorced', 'Age=51.00-63.00', 'DoesDoctorRecommendExercise=1.0'}","(('CurrentlySmoke', 0),)",0.21456044,-0.141454545,0.356014985,444+2.19,139,305,0.021933508,0.045311947,0.474820144,0.429508197,0.299537876
-"{'Age=51.00-63.00', 'MaritalStatus=Divorced', 'IsDiagnosedAsthma=0.0', 'DoesDoctorRecommendExercise=1.0'}","(('CurrentlySmoke', 0),)",0.225466893,-0.183695652,0.409162545,373+1.84,126,247,0.018426123,0.039264829,0.46031746,0.421052632,0.33579374
-"{'IsBornInUSA=1.0', 'MaritalStatus=Divorced', 'Age=51.00-63.00', 'DoesDoctorRecommendExercise=1.0'}","(('CurrentlySmoke', 0),)",0.271682341,-0.130665281,0.402347621,357+1.76,120,237,0.017635726,0.044303797,0.5,0.455696203,0.331251766
-"{'MaritalStatus=Divorced', 'Age=51.00-63.00', 'DoesDoctorRecommendExercise=1.0', 'IsBornInUSA=1.0', 'IsDiagnosedAsthma=0.0'}","(('CurrentlySmoke', 0),)",0.256962025,-0.163981382,0.420943407,294+1.45,109,185,0.014523539,0.037589883,0.486238532,0.448648649,0.343572751
-"{'IsBornInUSA=1.0', 'Region=Midwest', 'IsDiagnosedAsthma=0.0', 'MaritalStatus=NeverMarried', 'Age=<29.00'}","(('HoldHealthInsurance', 1),)",0.206163481,0.137443439,0.068720042,491+2.42,238,253,0.024255298,0.007888531,0.466386555,0.458498024,0.066411991
+version https://git-lfs.github.com/spec/v1
+oid sha256:1a633596a928013b59ed92cbc1d83f9a5ab075656e39a8af170b3f9130854e01
+size 1367

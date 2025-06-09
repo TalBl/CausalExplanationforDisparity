@@ -1,39 +1,58 @@
 import matplotlib.pyplot as plt
-import numpy as np
+import seaborn as sns
+import pandas as pd
 
-scores = {"SO": {"FCI": 0.3682372, "LINGAM": 0.368237, "GES": 0.36823726},
-          "MEPS": {"FCI": 0.3682372, "LINGAM": 0.352007, "GES": 0.365332},
-          "ACS": {"FCI": 0.7173318, "LINGAM": 0.717332, "GES": 0.454663}}
+# Original scores dictionary
+scores = {
+    "SO": {"FCI": 0.3113, "LINGAM": 0.3113, "GES": 0.3113, "INTEGRATION": 0.3113, "DEFAULT": 0.7},
+    "MEPS": {"FCI": 0.3901, "LINGAM": 0.386, "GES": 0.3665, "INTEGRATION": 0.430, "DEFAULT": 0.57},
+    "ACS": {"FCI": 0.386, "LINGAM": 0.399, "GES": 0.338, "INTEGRATION": 0.399, "DEFAULT": 0.5}
+}
 
+# Convert to DataFrame
+data = []
+for dataset, method_scores in scores.items():
+    for method, value in method_scores.items():
+        data.append({'Dataset': dataset, 'Method': method, 'Score': value})
+df = pd.DataFrame(data)
 
-datasets = list(scores.keys())
-methods = ["FCI", "LINGAM", "GES"]
-n_datasets = len(datasets)
-x = np.arange(n_datasets)  # label locations
-width = 0.25  # width of the bars
+# Set Seaborn style
+sns.set(style="whitegrid")
 
-# Build bar heights for each method
-values = {method: [scores[ds][method] if scores[ds][method] is not None else 0 for ds in datasets] for method in methods}
-missing = {method: [scores[ds][method] is None for ds in datasets] for method in methods}
+# Create the barplot
+plt.figure(figsize=(8, 6))
+barplot = sns.barplot(
+    data=df,
+    x='Dataset',
+    y='Score',
+    hue='Method',
+    hatch='/',
+    edgecolor='black'
+)
 
-# Plotting
-fig, ax = plt.subplots()
-colors = {'FCI': 'blue', 'LINGAM': 'green', 'GES': 'red'}
+# Apply hatch patterns manually
+hatches = ['/', '\\', 'x', '+', '|']
+bars = barplot.patches
+num_methods = df['Method'].nunique()
+for i, bar in enumerate(bars):
+    hatch = hatches[i % num_methods]
+    bar.set_hatch(hatch)
 
-for i, method in enumerate(methods):
-    bar = ax.bar(x + i*width, values[method], width, label=method, color=colors[method])
-    # Optionally mark missing values differently
-    for j, missing_val in enumerate(missing[method]):
-        if missing_val:
-            bar[j].set_color('gray')
-            bar[j].set_hatch('//')  # visually indicate missing
+# Set labels and formatting
+plt.ylabel("Score", fontsize=16)
+plt.xlabel("Dataset", fontsize=16)
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
 
-# Labels and formatting
-ax.set_ylabel('Score')
-ax.set_title('Causal Discovery Comparison Across Datasets')
-ax.set_xticks(x + width)
-ax.set_xticklabels(datasets)
-ax.legend()
+# Move the legend above the plot
+plt.legend(
+    title='',
+    fontsize=14,
+    loc='lower center',
+    bbox_to_anchor=(0.5, 1.02),
+    ncol=4,
+    frameon=False
+)
 
-plt.tight_layout()
-plt.savefig("outputs/dags/causalDagExp.png")
+plt.tight_layout()  # leave space at the top for legend
+plt.savefig("outputs/dags/causalDagExp.pdf")
