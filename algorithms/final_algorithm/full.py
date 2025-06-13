@@ -54,7 +54,7 @@ def algorithm(D: Dataset, k=K, threshold_support=THRESHOLD_SUPPORT, threshold=TH
     if D.need_filter_subpopulations:
         subgroups['condition'] = subgroups.apply(lambda row: D.func_filter_subs(row[f'{D.outcome_col}_group1'], row[f'{D.outcome_col}_group2']), axis=1)
         subgroups = subgroups.loc[subgroups['condition']==True]
-    subgroups.sort_values(by="support", ascending=False, ignore_index=True).head(500).to_csv(f"outputs/{D.name}/interesting_subpopulations.csv", index=False)
+    subgroups.sort_values(by="support", ascending=False, ignore_index=True).head(200).to_csv(f"outputs/{D.name}/interesting_subpopulations.csv", index=False)
     # step 2 - find the best treatment for each subpopulation
     df_treatments = find_best_treatment(D)
     if len(df_treatments) == 0:
@@ -75,8 +75,8 @@ from cleaning_datasets.clean_acs import filter_subs as acs_filter_subs, filter_t
 meps = Dataset(name="meps", outcome_col="FeltNervous",
                treatments=['Exercise', 'CurrentlySmoke', 'HoldHealthInsurance', 'Student', 'IsWorking',
                            'LongSinceLastFluVaccination', 'WearsSeatBelt', 'TakesAspirinFrequently'],
-               subpopulations=['MaritalStatus', 'Region', 'Race', 'Age', 'IsDiagnosedDiabetes', 'IsDiagnosedDiabetes',
-                               'IsDiagnosedAsthma', 'IsBornInUSA', 'DoesDoctorRecommendExercise', 'IsDiagnosedCancer'],
+               subpopulations=['MaritalStatus', 'Region', 'Race', 'Age', 'IsDiagnosedDiabetes',
+                               'IsDiagnosedAsthma', 'IsBornInUSA', 'DoesDoctorRecommendExercise'],
                columns_to_ignore=[], clean_path="outputs/meps/clean_data.csv",
                func_filter_subs=meps_filter_facts, func_filter_treats=meps_filter_facts, need_filter_subpopulations=True, need_filter_treatments=True,
                dag_file="data/meps/causal_dag.txt")
@@ -97,7 +97,7 @@ so = Dataset(name="so", outcome_col="ConvertedSalary",
 acs = Dataset(name="acs", outcome_col="Health insurance coverage recode",
               treatments=['Temporary absence from work', 'Worked last week',
                           'Widowed in the past 12 months', "Total person earnings",
-                          'Educational attainment', 'Occupation recode', 'Gave birth within past year', "Field of degree - Science and Engineering flag"],
+                          'Educational attainment', 'Gave birth within past year', "Field of degree - Science and Engineering flag"],
               subpopulations=['Sex', 'Age', 'With a disability', "Race/Ethnicity",
                               'Region', 'Language other than English spoken at home', 'state code',
                               'Marital status', 'Nativity', 'Related child'],
@@ -116,8 +116,8 @@ if __name__ == "__main__":
     # e32 = time.time()
     # print(f"acs took {e32 - e22}")
     """
-    acs took 3292.5319454669952
-meps took 1009.5246999263763
-so took 686.8313839435577
+acs took 1725.8723595142365
+meps took 121.82038521766663
+so took 450.9267861843109
     """
 

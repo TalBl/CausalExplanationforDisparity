@@ -2,7 +2,7 @@ from causallearn.search.ConstraintBased.PC import pc
 import pandas as pd
 from sklearn.preprocessing import OrdinalEncoder
 
-for d in ['meps']:
+for d in ['meps','so', 'acs']:
     data_mpg = pd.read_csv(f"outputs/{d}/clean_data.csv").dropna()
     if 'Unnamed: 0' in data_mpg.columns:
         data_mpg = data_mpg.drop(columns=['Unnamed: 0'])
@@ -38,13 +38,13 @@ for d in ['meps']:
     labels = [label.replace(',', '_') for label in labels]
     data = data_mpg.to_numpy()
 
-    # cg = pc(data)
+    cg = pc(data)
     #
     # # Visualization using pydot
     from causallearn.utils.GraphUtils import GraphUtils
     #
-    # pyd = GraphUtils.to_pydot(cg.G, labels=labels)
-    # pyd.write_raw(f"causal_graph_pc_{d}.dot")
+    pyd = GraphUtils.to_pydot(cg.G, labels=labels)
+    pyd.write_raw(f"causal_graph_pc_{d}.dot")
     #
     from causallearn.search.ScoreBased.GES import ges
 
@@ -52,23 +52,23 @@ for d in ['meps']:
 
     pyd = GraphUtils.to_pydot(Record['G'], labels=labels)
     pyd.write_png("causal_graph_ges.png")
-    # pyd.write_raw(f"causal_graph_ges_{d}.dot")
-    #
-    #
-    # from causallearn.search.FCMBased import lingam
-    # model_lingam = lingam.ICALiNGAM()
-    # model_lingam.fit(data)
+    pyd.write_raw(f"causal_graph_ges_{d}.dot")
+
+
+    from causallearn.search.FCMBased import lingam
+    model_lingam = lingam.ICALiNGAM()
+    model_lingam.fit(data)
 
     from causallearn.search.FCMBased.lingam.utils import make_dot
-    # dot = make_dot(model_lingam.adjacency_matrix_, labels=labels)
+    dot = make_dot(model_lingam.adjacency_matrix_, labels=labels)
 
-    # dot.save(f'causal_graph_lingam_{d}.dot')
+    dot.save(f'causal_graph_lingam_{d}.dot')
 
-    # from causallearn.search.ConstraintBased.FCI import fci
-    # from causallearn.utils.cit import fisherz
-    #
-    # graph, sep_set = fci(data, test_method=fisherz, alpha=0.05)
-    #
-    # # Visualize and export the graph
-    # pyd = GraphUtils.to_pydot(graph, labels=labels)
-    # pyd.write_raw(f"causal_graph_fci_{d}.dot")
+    from causallearn.search.ConstraintBased.FCI import fci
+    from causallearn.utils.cit import fisherz
+
+    graph, sep_set = fci(data, test_method=fisherz, alpha=0.05)
+
+    # Visualize and export the graph
+    pyd = GraphUtils.to_pydot(graph, labels=labels)
+    pyd.write_raw(f"causal_graph_fci_{d}.dot")

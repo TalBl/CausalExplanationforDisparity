@@ -1,4 +1,4 @@
-from algorithms.final_algorithm.new_greedy import parse_subpopulation, get_intersection, get_union, print_matrix
+from algorithms.final_algorithm.new_greedy import parse_subpopulation, print_matrix, get_union, get_intersection
 from algorithms.final_algorithm.find_treatment_new import find_best_treatment
 from cleaning_datasets.clean_so import filter_facts as so_filter_facts
 from cleaning_datasets.clean_meps import filter_facts as meps_filter_facts
@@ -137,12 +137,19 @@ from algorithms.final_algorithm.full import acs, so, meps
 #               func_filter_treats=acs_filter_treats, dag_file="data/acs/causal_dag.txt")
 import time
 start = time.time()
-baseline(so)
+# baseline(so)
 e1 = time.time()
-print(f"so took {e1-start} seconds")
+# print(f"so took {e1-start} seconds")
 baseline(meps)
 e2 = time.time()
 print(f"meps took {e2-e1} seconds")
-baseline(acs)
-e3 = time.time()
-print(f"acs took {e3-e2} seconds")
+# baseline(acs)
+# e3 = time.time()
+# print(f"acs took {e3-e2} seconds")
+
+"""
+acs took 10303.978988409042 seconds
+meps took 155.4656527042389 seconds
+so took 840.0273792743683 seconds
+
+"""

@@ -195,6 +195,7 @@ occupation_mapping = {
 
 def clean_and_transform_data():
     cleaned_df = pd.read_csv("outputs/acs/2018_all_data_clean.csv")
+    cleaned_df['Total person earnings'] = cleaned_df["Total person's earnings"]
     cleaned_df = cleaned_df[['Sex', 'Age', 'With a disability', 'Place of birth', 'School enrollment', 'Cognitive difficulty',
                              'Region', 'Language other than English spoken at home', 'Citizenship status', 'state code',
                              'Percent of poverty status', 'Marital status', 'Hearing difficulty', 'Related child', 'Nativity',
@@ -203,11 +204,11 @@ def clean_and_transform_data():
                              'Insurance through a current or former employer or union','Race/Ethnicity','Health insurance coverage recode',
                              'Gave birth within past year', 'Place of work - State or foreign country recode', 'Ability to speak English',
                              'Widowed in the past 12 months', 'person weight', 'When last worked', 'Georgraphic division', 'Raw labor-force status',
-                             'Adjustment factor for income and earnings dollar amounts', 'Employment status of parents', "Total person's earnings",
+                             'Adjustment factor for income and earnings dollar amounts', 'Employment status of parents', "Total person earnings",
                              "Usual hours worked per week past 12 months", "Medicaid, Medical Assistance, or any kind of government-assistance plan for those with low incomes or a disability",
                              "Field of degree - Science and Engineering flag", "Weeks worked during past 12 months", "Looking for work"]]
     for column in cleaned_df.columns:
-        if column == "Total person's income":
+        if column == "Total person income":
             continue
         if pd.api.types.is_numeric_dtype(cleaned_df[column]):
             unique_values = cleaned_df[cleaned_df[column] >= 0][column].dropna().nunique()
@@ -236,10 +237,11 @@ def clean_and_transform_data():
     cleaned_df['group1'] = cleaned_df['Occupation recode'].apply(lambda x: 1 if x in ["Cleaning and Maintenance", "Farming, Fishing, and Forestry", "Repair and Maintenance", "Construction"] else 0)
     cleaned_df['group2'] = 1
     cleaned_df = cleaned_df[['Temporary absence from work', 'Worked last week', "person weight",
-                             'Widowed in the past 12 months', "Total person's earnings",
+                             'Widowed in the past 12 months', "Total person earnings",
                              'Educational attainment', 'Georgraphic division', 'Sex', 'Age', 'With a disability', "Race/Ethnicity",
                              'Region', 'Language other than English spoken at home', 'state code',
-                             'Marital status', 'Nativity', 'Related child', 'group1', 'group2', 'Health insurance coverage recode']]
+                             'Marital status', 'Nativity', 'Related child', 'group1', 'group2', 'Health insurance coverage recode',
+                             'Gave birth within past year', 'Field of degree - Science and Engineering flag']]
     #threshold = 0.5 * len(cleaned_df)  # 50% of the number of rows
     #cleaned_df = cleaned_df.loc[:, cleaned_df.isnull().sum() <= threshold]
     return cleaned_df

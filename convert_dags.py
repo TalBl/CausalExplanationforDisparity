@@ -8,7 +8,7 @@ def convert_graph(file_name):
 
     # Step 1: Build node label map from lines like: 0 [label="real name"];
     for line in lines:
-        match = re.match(r'^(\d+)\s+\[label="(.+?)"\]', line)
+        match = re.match(r'^(\d+)\s+\[label=(.+?)\]', line)
         if match:
             node_id = match.group(1)
             label = match.group(2)
@@ -27,5 +27,5 @@ def convert_graph(file_name):
     with open(f"outputs/dags/{file_name}","w") as f:
         f.writelines(output_lines)
 
-for file in ["causal_graph_fci_acs.dot", "causal_graph_fci_so.dot", "causal_graph_fci_meps.dot"]:
+for file in ["causal_graph_fci_meps.dot"]:
     convert_graph(file)

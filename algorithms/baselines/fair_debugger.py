@@ -451,13 +451,21 @@ def baseline(d: Dataset):
 #               func_filter_treats=acs_filter_treats, dag_file="data/acs/causal_dag.txt")
 from algorithms.final_algorithm.full import acs, so, meps
 import time
-start = time.time()
-baseline(so)
+# start = time.time()
+# baseline(so)
 e1 = time.time()
-print(f"so took {e1-start}")
+# print(f"so took {e1-start}")
 baseline(meps)
 e2 = time.time()
 print(f"meps took {e2-e1}")
-baseline(acs)
-e3 = time.time()
-print(f"acs took {e3-e2}")
+# baseline(acs)
+# e3 = time.time()
+# print(f"acs took {e3-e2}")
+
+
+"""
+acs took 31.83944034576416
+so took 19.208853483200073
+meps took 9.014926195144653
+
+"""

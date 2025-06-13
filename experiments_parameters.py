@@ -122,56 +122,61 @@ def save_graph3(df_results, param_name):
     plt.savefig(f'outputs/parameters/{param_name}_log_utility_comparison.pdf')
 
 
-# l = []
-# for t in [0,0.2,0.4,0.6,0.8,1]:
-#     for k in [1, 3, 5, 7, 9, 11, 13]:
-#         l.append(run_test2(d=meps, k=k, threshold=t, threshold_support=DEFAULT_SUPPORT))
-#         l.append(run_test2(d=so, k=k, threshold=t, threshold_support=DEFAULT_SUPPORT))
-#         l.append(run_test2(d=acs, k=k, threshold=t, threshold_support=DEFAULT_SUPPORT))
-# pd.DataFrame(l).to_csv("outputs/parameters/k_results.csv", index=False)
+l = []
+for t in [0,0.2,0.4,0.6,0.8,1]:
+    datasets = [[acs, 0], [so, 0], [meps, 0]]
+    for k in [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]:
+        tmp_datasets = datasets
+        datasets = []
+        for data, last_score in tmp_datasets:
+            r = run_test2(d=data, k=k, threshold=t, threshold_support=DEFAULT_SUPPORT)
+            if r['score'] > last_score:
+                datasets.append([data, r['score']])
+                l.append(r)
+pd.DataFrame(l).to_csv("outputs/parameters/k_results.csv", index=False)
 
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
-
-from io import StringIO
-df = pd.read_csv("outputs/parameters/k_results.csv")
-
-# Set Seaborn style
-sns.set(style="whitegrid", font_scale=1.2)
-
-# Define marker styles for threshold values (expand if you have more thresholds)
-marker_styles = ['o', 's', '^', 'D', 'P', '*', 'X', 'v', '<', '>']
-thresholds = df['threshold'].unique()
-marker_map = {val: marker_styles[i % len(marker_styles)] for i, val in enumerate(sorted(thresholds))}
-
-# Plot each dataset
-for dataset in df['dataset'].unique():
-    plt.figure(figsize=(8, 6))
-    subset = df[df['dataset'] == dataset]
-
-    # Plot manually to control markers
-    for threshold_value, group in subset.groupby('threshold'):
-        sns.scatterplot(
-            data=group,
-            x='k',
-            y='score',
-            marker=marker_map[threshold_value],
-            s=100,
-            label=f"threshold={threshold_value}"
-        )
-
-    plt.title(f"Score vs K for {dataset.upper()}")
-    plt.xlabel("k")
-    plt.ylabel("Score")
-    plt.legend(title="Threshold")
-    plt.tight_layout()
-    plt.savefig(f"k_comparison_{dataset}.pdf")
+# import pandas as pd
+# import seaborn as sns[
+# import matplotlib.pyplot as plt
+#
+# from io import StringIO
+# df = pd.read_csv("outputs/parameters/k_results.csv")
+#
+# # Set Seaborn style
+# sns.set(style="whitegrid", font_scale=1.2)
+#
+# # Define marker styles for threshold values (expand if you have more thresholds)
+# marker_styles = ['o', 's', '^', 'D', 'P', '*', 'X', 'v', '<', '>']
+# thresholds = df['threshold'].unique()
+# marker_map = {val: marker_styles[i % len(marker_styles)] for i, val in enumerate(sorted(thresholds))}
+#
+# # Plot each dataset
+# for dataset in df['dataset'].unique():
+#     plt.figure(figsize=(8, 6))
+#     subset = df[df['dataset'] == dataset]
+#
+#     # Plot manually to control markers
+#     for threshold_value, group in subset.groupby('threshold'):
+#         sns.scatterplot(
+#             data=group,
+#             x='k',
+#             y='score',
+#             marker=marker_map[threshold_value],
+#             s=100,
+#             label=f"threshold={threshold_value}"
+#         )
+#
+#     plt.title(f"Score vs K for {dataset.upper()}")
+#     plt.xlabel("k")
+#     plt.ylabel("Score")
+#     plt.legend(title="Threshold")
+#     plt.tight_layout()
+#     plt.savefig(f"k_comparison_{dataset}.pdf")
 
 
 
 # l = pd.read_csv("outputs/parameters/k_results.csv")
-# save_graph2(l, "k")
+# # save_graph2(l, "k")
 # l = []
 # for threshold in [0.1, 0.25, 0.35, 0.45, 0.5, 0.65, 0.75, 0.85, 1]:
 #     l.append(run_test2(d=meps, k=DEFAULT_K, threshold=threshold, threshold_support=DEFAULT_SUPPORT))

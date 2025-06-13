@@ -141,17 +141,23 @@ def baseline(d: Dataset):
 
 from algorithms.final_algorithm.full import acs, so, meps
 import time
-start = time.time()
-baseline(so)
+# start = time.time()
+# baseline(so)
 e1 = time.time()
-print(f"so took {e1-start}")
+# print(f"so took {e1-start}")
 baseline(meps)
 e2 = time.time()
 print(f"meps took {e2-e1}")
-baseline(acs)
-e3 = time.time()
-print(f"acs took {e3-e2}")
+# baseline(acs)
+# e3 = time.time()
+# print(f"acs took {e3-e2}")
+"""
+acs took 35294.20775818825
+meps took 35.963284730911255
+so took 24.49563431739807
 
+
+"""
 
 """
 0. table results: one column utility + one column the matrix + one column the runtime - all precentage comparison Brute force results
