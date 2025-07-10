@@ -5,12 +5,13 @@ import matplotlib.pyplot as plt
 for name in ['so', 'acs', 'meps']:
     # ExDis
     jaccard_matrix = pd.read_csv(f"outputs/{name}/jaccard_matrix.csv", index_col=0)
+    jaccard_matrix = jaccard_matrix.sort_index().sort_index(axis=1)
+
     plt.figure(figsize=(10, 8), constrained_layout=True)
     ax = sns.heatmap(
         jaccard_matrix,
         annot=False,
         cmap="Greys",
-        linewidths=1.5,        # thickness between cells
         linecolor='black',     # border color
         xticklabels=False,
         yticklabels=False,
@@ -28,12 +29,13 @@ for name in ['so', 'acs', 'meps']:
 
     # Brute Force
     jaccard_matrix = pd.read_csv(f"outputs/{name}/baselines/naive_jaccard_matrix.csv", index_col=0)
+    jaccard_matrix = jaccard_matrix.sort_index().sort_index(axis=1)
+
     plt.figure(figsize=(10, 8), constrained_layout=True)
     ax = sns.heatmap(
         jaccard_matrix,
         annot=False,
         cmap="Greys",
-        linewidths=1.5,        # thickness between cells
         linecolor='black',     # border color
         xticklabels=False,
         yticklabels=False,
@@ -51,12 +53,13 @@ for name in ['so', 'acs', 'meps']:
 
     # Top-K
     jaccard_matrix = pd.read_csv(f"outputs/{name}/baselines/top_k_jaccard_matrix.csv", index_col=0)
+    jaccard_matrix = jaccard_matrix.sort_index().sort_index(axis=1)
+
     plt.figure(figsize=(10, 8), constrained_layout=True)
     ax = sns.heatmap(
         jaccard_matrix,
         annot=False,
         cmap="Greys",
-        linewidths=1.5,        # thickness between cells
         linecolor='black',     # border color
         xticklabels=False,
         yticklabels=False,
@@ -77,13 +80,14 @@ for name in ['so', 'acs', 'meps']:
     path = f"outputs/{name}/baselines/de_jaccard_matrix.csv"
     if os.path.exists(path):
         jaccard_matrix = pd.read_csv(f"outputs/{name}/baselines/de_jaccard_matrix.csv", index_col=0)
+        jaccard_matrix = jaccard_matrix.sort_index().sort_index(axis=1)
+
         if jaccard_matrix.shape[0] > 1:
             plt.figure(figsize=(10, 8), constrained_layout=True)
             ax = sns.heatmap(
                 jaccard_matrix,
                 annot=False,
                 cmap="Greys",
-                linewidths=1.5,        # thickness between cells
                 linecolor='black',     # border color
                 xticklabels=False,
                 yticklabels=False,
@@ -109,13 +113,14 @@ for name in ['so', 'acs', 'meps']:
     path = f"outputs/{name}/baselines/rf_jaccard_matrix.csv"
     if os.path.exists(path):
         jaccard_matrix = pd.read_csv(f"outputs/{name}/baselines/rf_jaccard_matrix.csv", index_col=0)
+        jaccard_matrix = jaccard_matrix.sort_index().sort_index(axis=1)
+
         if jaccard_matrix.shape[0] > 1:
             plt.figure(figsize=(10, 8), constrained_layout=True)
             ax = sns.heatmap(
                 jaccard_matrix,
                 annot=False,
                 cmap="Greys",
-                linewidths=1.5,        # thickness between cells
                 linecolor='black',     # border color
                 xticklabels=False,
                 yticklabels=False,

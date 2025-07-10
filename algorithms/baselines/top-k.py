@@ -1,6 +1,6 @@
 import pandas as pd
 from algorithms.final_algorithm.new_greedy import get_intersection, get_union, print_matrix
-from Utils import Dataset, ni_score, choose_lamda
+from Utils import Dataset, get_indices
 import itertools
 import numpy as np
 import csv
@@ -14,25 +14,20 @@ ALPHA = 0.5
 K = 5
 
 
-def get_score(group, alpha, d, N, L, max_outcome):
+def get_score(group, d):
     ni_score_sum = 0
     for _, row in group.iterrows():
-        ni_score_sum += (row['iscore'] / max_outcome)
-    jaccard_matrix = print_matrix(d, {}, {}, list(group['subpopulation']))
+        ni_score_sum += row['score']
+    jaccard_matrix = print_matrix(d, {}, {}, [[x['subpop'], x['indices']] for _, x in pd.DataFrame(group).iterrows()])
     jaccard_matrix.to_csv(f"outputs/{d.name}/baselines/top_k_jaccard_matrix.csv", quoting=csv.QUOTE_NONNUMERIC)
     return {"score": ni_score_sum}
 
 
 def baseline(d: Dataset):
-    df_facts = pd.read_csv(f"outputs/{d.name}/all_facts.csv")
-    subs = pd.read_csv(f"outputs/{d.name}/subpopulations_and_treatments.csv")
-    L = subs.shape[0]
-    df_clean = pd.read_csv(d.clean_path)
-    N = df_clean.shape[0]
-    max_outcome = max(df_clean[d.outcome_col])
-    # df_facts['utility'] = df_facts['nd_score'] * df_facts['support']
-    df_facts_top_k = df_facts.sort_values(by='iscore', ascending=False).head(K)
-    scores = get_score(group=df_facts_top_k, alpha=ALPHA, d=d, L=L, N=N, max_outcome=max_outcome)
+    subs = pd.read_csv(f"outputs/{d.name}/naive_subpopulations_and_treatments.csv")
+    df_facts_top_k = subs.sort_values(by='score', ascending=False).head(K)
+    df_facts_top_k['indices'] = df_facts_top_k['subpop'].apply(get_indices, data=pd.read_csv(d.clean_path))
+    scores = get_score(group=df_facts_top_k, d=d)
     df_facts_top_k.to_csv(f'outputs/{d.name}/baselines/facts_top_k.csv', index=False)
     pd.DataFrame([scores]).to_csv(f'outputs/{d.name}/baselines/top_k_scores.csv')
 
@@ -68,19 +63,19 @@ def baseline(d: Dataset):
 
 from algorithms.final_algorithm.full import acs, so, meps
 import time
-# start = time.time()
-# baseline(so)
+start = time.time()
+baseline(so)
 e1 = time.time()
-# print(f"so took {e1-start}")
+print(f"so took {e1-start}")
 baseline(meps)
 e2 = time.time()
 print(f"meps took {e2-e1}")
-# baseline(acs)
-# e3 = time.time()
-# print(f"acs took {e3-e2}")
+baseline(acs)
+e3 = time.time()
+print(f"acs took {e3-e2}")
 
 """
-so took 9.132369995117188
-meps took 1.6673293113708496
-acs took 143.78709244728088
+so took 5.979233026504517
+meps took 0.7690680027008057
+acs took 95.76555919647217
 """

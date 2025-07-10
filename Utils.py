@@ -1,3 +1,5 @@
+import random
+
 import numpy as np
 from dowhy import CausalModel
 import copy
@@ -6,11 +8,21 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import itertools
 import pickle
 import pandas as pd
+import pydot
 import ast
 import logging
 logger = logging.getLogger(__name__)
+import signal
+
+class TimeoutException(Exception):
+    pass
+
+def handler(signum, frame):
+    raise TimeoutException("Estimation timed out")
 
 MAX_K=7
+MIN_SIZE_FOR_TREATED_GROUP = 50
+P_VALUE_THRESHOLD = 0.05
 
 class Dataset:
     def __init__(self, name, outcome_col, treatments, subpopulations, columns_to_ignore, clean_path, func_filter_subs, func_filter_treats,
@@ -40,26 +52,70 @@ class Dataset:
 def ni_score(x, lamda):
     return 1 - (1 / (np.exp(lamda * x)))
 
+def parse_subpopulation_str(s: str):
+    elements = ast.literal_eval(f"{{{s[11:-2]}}}")
+    item_set = {}
+    for element in elements:
+        key, value = element.split('=')
+        try:
+            value = float(value)
+        except:
+            value = value
+        item_set[key] = value
+    return item_set
 
-def choose_lamda(data, target_range=1.0):
-    data_range = np.percentile(data, 90)
-    lamda = data_range
-    return lamda
+def get_subpopulation_df(d: Dataset, elements: dict):
+    df = pd.read_csv(d.clean_path)
+    for key, value in elements.items():
+        df = df[df[key] == value]
+    return df
 
-# def choose_lamda(data, upper_limit=0.999):
-#     data = np.asarray(data)
-#
-#     def condition(lamda):
-#         scores = ni_score(data, lamda)
-#         return np.percentile(scores, 90) - upper_limit
-#
-#     # Binary search to find lamda where 95th percentile score is just below `upper_limit`
-#     low, high = 0.0001, 100
-#     for _ in range(10000):
-#         mid = (low + high) / 2
-#         if condition(mid) > 0:
-#             high = mid
-#         else:
-#             low = mid
-#     return low
+def getTreatmentATE(df_group, causal_graph, treatments, outcome_col):
+    # Set the signal handler
+    signal.signal(signal.SIGALRM, handler)
+
+    # Set timeout (10 minutes)
+    signal.alarm(600)
+    df_group['TempTreatment'] = df_group.apply(lambda row: int(all(row[attr] == val for attr, val in treatments)), axis=1)
+    if df_group.loc[df_group['TempTreatment'] == 1].shape[0] < MIN_SIZE_FOR_TREATED_GROUP:
+        return None
+    try:
+        model = CausalModel(
+            data=df_group,
+            graph=causal_graph,
+            treatment='TempTreatment',
+            outcome=outcome_col)
+        estimands = model.identify_effect()
+        causal_estimate_reg = model.estimate_effect(estimands,
+                                                    method_name="backdoor.linear_regression",
+                                                    target_units="ate",
+                                                    effect_modifiers=[],
+                                                    test_significance=True)
+        signal.alarm(0)
+        ate, p_value = causal_estimate_reg.value, causal_estimate_reg.test_stat_significance()['p_value']
+        if isinstance(p_value, np.ndarray): # When running on SO data - p_value returned as an array
+            p_value = p_value[0]
+        if p_value > P_VALUE_THRESHOLD:
+            return None
+    except TimeoutException:
+        print("⚠️ Skipped: Estimation took too long (> 10 minutes).")
+        return None
+    except Exception as e:
+        return None
+    return ate, p_value
+
+
+def get_indices(s, data):
+    s_con = ast.literal_eval(s)
+    data_copy = data.copy()
+    for attr, val in s_con.items():
+        data_copy = data_copy[data_copy[attr] == val]
+    return set(data_copy.index)
+
+
+def calc_sim(A, B):
+    intersection = len(A & B)
+    union = len(A | B)
+    sim = intersection / union if union > 0 else 0
+    return sim
 

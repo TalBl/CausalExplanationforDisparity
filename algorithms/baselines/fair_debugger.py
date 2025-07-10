@@ -13,17 +13,18 @@ from sklearn.model_selection import train_test_split
 from algorithms.final_algorithm.new_greedy import get_intersection, ni_score, get_union, print_matrix
 from algorithms.final_algorithm.find_treatment_new import findBestTreatment, get_subpopulation
 from algorithms.debug_RF.DebugRF import Dataset_RF, FairnessMetric, FairnessDebuggingUsingMachineUnlearning
-from algorithms.final_algorithm.find_treatment_new import changeDAG, getTreatmentATE
+# from algorithms.final_algorithm.find_treatment_new import changeDAG, getTreatmentATE
+from algorithms.final_algorithm.find_best_treatment import process_subpopulation
 from cleaning_datasets.clean_acs import filter_subs as acs_filter_subs, filter_treats as acs_filter_treats
 from cleaning_datasets.clean_so import filter_facts as so_filter_facts
 from cleaning_datasets.clean_meps import filter_facts as meps_filter_facts
-from Utils import Dataset, choose_lamda
+from Utils import Dataset, getTreatmentATE, get_indices
 import itertools
 
 THRESHOLD_SUPPORT = 0.01
 ALPHA = 0.5
 K = 5
-THRESHOLD = 0.25
+THRESHOLD = 0.55
 
 
 '''Class for loading and preprocessing german credits dataset'''
@@ -282,7 +283,7 @@ def get_score(group, d, calc_intersection, calc_union, max_outcome):
     iscore = 0
     for _, row in group:
         g.append(row)
-        iscore += row['iscore'] / max_outcome
+        iscore += row['iscore']
     for row1, row2 in itertools.combinations(g, 2):
         intersection = get_intersection(row1, row2, d, calc_intersection)
         union = get_union(row1, row2, d, calc_union)
@@ -324,30 +325,24 @@ def parse_subpoplation(df_original, sub_str):
     size = df.shape[0]
     belong_groups = df.loc[(df['group1'] == 1) | (df['group2'] == 1)]
     support = belong_groups.shape[0] / df_original.shape[0]
-    return group1, group2, size, support
+    idxs = set(df.index)
+    return group1, group2, size, support, idxs
 
 
 def baseline(d: Dataset):
     df = pd.read_csv(d.clean_path)
     N = df.shape[0]
     max_outcome = max(df[d.outcome_col])
-    with open(f"data/{d.name}/causal_dag.txt", "r") as f:
-        lines = f.readlines()
     p_value_threshold = 0.05 if d.name != "meps" else 0.1
     if d.name == "acs":
         d.clean_path = d.clean_path.replace("clean", "sample")
-    treatments, _ = findBestTreatment("", d, lines, p_value_threshold)
+    treatments = process_subpopulation(pd.Series(), d, nx.DiGraph(nx.nx_pydot.read_dot(d.dag_file)), max_outcome)['treatment_combo']
+    # treatments, _ = findBestTreatment("", d, lines, p_value_threshold)
     print(treatments)
     df = pd.read_csv(d.clean_path)
     df['TempTreatment'] = df.apply(lambda row: int(all(row[attr] == val for attr, val in treatments)), axis=1)
-    if len(treatments) > 1:
-        dag = changeDAG(lines, [x[0] for x in treatments])
-    else:
-        treatment_att_file_name = list(treatments)[0][0]
-        if treatment_att_file_name.startswith('DevType'):
-            treatment_att_file_name = 'DevType'
-        with open(f"data/{d.name}/causal_dags_files/{treatment_att_file_name}.pkl", 'rb') as file:
-            dag = pickle.load(file)
+    treatment_att_file_name = list(treatments)[0][0]
+    dag = f"data/{d.name}/causal_dags_files/graph_{treatment_att_file_name}.dot"
     df = df.dropna(subset=d.subpopulations_atts)
     y = df[d.outcome_col]
     X = df.drop(d.outcome_col, axis=1)
@@ -362,13 +357,13 @@ def baseline(d: Dataset):
     group2_idx = X_test.loc[X_test['group2']==1.0].index.tolist()
     X_test = X_test[d.subpopulations_atts]
     X_test.to_csv(f"outputs/{d.name}/test.csv", index=False)
-    if d.name == "so":
-        myDataset = SODataset(rootTrain=f"outputs/{d.name}/train.csv", rootTest=f"outputs/{d.name}/test.csv")
-    else:
-        if d.name == "meps":
-            myDataset = MEPSDataset(rootTrain=f"outputs/{d.name}/train.csv", rootTest=f"outputs/{d.name}/test.csv")
-        else:
-            myDataset = ACSDataset(rootTrain=f"outputs/{d.name}/train.csv", rootTest=f"outputs/{d.name}/test.csv")
+    # if d.name == "so":
+    #     myDataset = SODataset(rootTrain=f"outputs/{d.name}/train.csv", rootTest=f"outputs/{d.name}/test.csv")
+    # else:
+    #     if d.name == "meps":
+    #         myDataset = MEPSDataset(rootTrain=f"outputs/{d.name}/train.csv", rootTest=f"outputs/{d.name}/test.csv")
+    #     else:
+    #         myDataset = ACSDataset(rootTrain=f"outputs/{d.name}/train.csv", rootTest=f"outputs/{d.name}/test.csv")
 
     # fairnessDebug = FairnessDebuggingUsingMachineUnlearning(myDataset,
     #                                                         ["TempTreatment", 1, 0],
@@ -386,28 +381,29 @@ def baseline(d: Dataset):
     # if d.name == "acs":
     #     d.clean_path = d.clean_path.replace("sample", "clean")
     df_facts = pd.read_csv(f"outputs/{d.name}/baselines/facts_rf.csv")
-    df = pd.read_csv(d.clean_path)
-    L = df_facts.shape[0]
+    data = pd.read_csv(d.clean_path)
     res = []
     for _, row in df_facts.iterrows():
         sub = row["Subset"]
-        group1, group2, size, support = parse_subpoplation(df, sub)
-        result = CalcIScore(treatments, d, lines, len(treatments), group1, group2, p_value_threshold)
+        group1, group2, size, support, idxs = parse_subpoplation(data, sub)
+        res1 = getTreatmentATE(group1, dag, treatments, d.outcome_col)
+        if not res1:
+            continue
+        ate1, _ = res1
+        res2 = getTreatmentATE(group2, dag, treatments, d.outcome_col)
+        if not res2:
+            continue
+        ate2, _ = res2
+        result = abs(ate1 - ate2) / max_outcome
         size_group1 = group1.shape[0]
         size_group2 = group2.shape[0]
-        diff_means = np.mean(group1[d.outcome_col]) - np.mean(group2[d.outcome_col])
         if result:
-            res.append({'subpopulation': sub, 'treatment': treatments, 'cate1': result[1], 'cate2': result[2],
-                        'iscore': result[0], 'size_group1': size_group1, "size_group2": size_group2,
-                        "diff_means": diff_means, "avg_group1": np.mean(group1[d.outcome_col]),
-                        "avg_group2": np.mean(group2[d.outcome_col]), "size": size, "support": support})
-        else:
-            res.append({'subpopulation': sub, 'treatment': treatments, 'cate1': None, 'cate2': None,
-                        'iscore': None, 'size_group1': size_group1, "size_group2": size_group2,
-                        "diff_means": diff_means, "avg_group1": np.mean(group1[d.outcome_col]),
-                        "avg_group2": np.mean(group2[d.outcome_col]), "size": size, "support": support})
+            res.append({'subpop': sub, 'treatment': treatments, 'ate1': ate1, 'ate2': ate2,
+                        'iscore': result, 'size_group1': size_group1, "size_group2": size_group2,
+                        "avg_group1": np.mean(group1[d.outcome_col]),
+                        "avg_group2": np.mean(group2[d.outcome_col]), "size": size, "support": support,
+                        'indices': idxs})
     df = pd.DataFrame(res)
-    df = df.loc[df['iscore'].notnull()]
     res_group = []
     k = K
     calc_intersection, calc_union, scores_dict = {}, {}, {}
@@ -418,9 +414,12 @@ def baseline(d: Dataset):
     for x in res_group:
         _, row = x
         g.append(row)
-    jaccard_matrix = print_matrix(d, calc_intersection, calc_union, [x['subpopulation'] for x in g])
+    df_results = pd.DataFrame(g)
+    jaccard_matrix = print_matrix(d, {}, {}, [[x['subpop'], x['indices']] for _, x in df_results.iterrows()])
     jaccard_matrix.to_csv(f"outputs/{d.name}/baselines/rf_jaccard_matrix.csv", quoting=csv.QUOTE_NONNUMERIC)
-    pd.DataFrame(g).to_csv(f'outputs/{d.name}/baselines/facts_final_rf.csv', index=False)
+    df_results = df_results.sort_values(by=['iscore'], ascending=False)
+    df_results = df_results.drop(columns=['indices'])
+    df_results.to_csv(f'outputs/{d.name}/baselines/facts_final_rf.csv', index=False)
     pd.DataFrame([scores_dict]).to_csv(f'outputs/{d.name}/baselines/rf_scores.csv', index=False)
 
 
@@ -452,13 +451,13 @@ def baseline(d: Dataset):
 from algorithms.final_algorithm.full import acs, so, meps
 import time
 # start = time.time()
-# baseline(so)
+baseline(so)
 e1 = time.time()
 # print(f"so took {e1-start}")
 baseline(meps)
 e2 = time.time()
 print(f"meps took {e2-e1}")
-# baseline(acs)
+baseline(acs)
 # e3 = time.time()
 # print(f"acs took {e3-e2}")
 

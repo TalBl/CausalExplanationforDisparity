@@ -1,3 +1,5 @@
+import csv
+
 import pandas as pd
 import numpy as np
 from time import time
@@ -5,11 +7,13 @@ from time import time
 # import demo
 from Utils import Dataset
 from algorithms.divexplorer.divexplorer import DivergenceExplorer
-from algorithms.final_algorithm.find_treatment_new import find_best_treatment
-from algorithms.final_algorithm.new_greedy import find_group, calc_facts_metrics
-from tqdm import tqdm
+from algorithms.final_algorithm.clustering2 import clustering
+from algorithms.final_algorithm.find_best_treatment import find_best_treatment
 import warnings
 import logging
+
+from algorithms.final_algorithm.new_greedy import print_matrix
+
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',
                     level=logging.ERROR,
                     datefmt='%Y-%m-%d %H:%M:%S')
@@ -18,26 +22,29 @@ logger = logging.getLogger(__name__)
 warnings.filterwarnings("ignore")
 import matplotlib
 matplotlib.use('Agg')
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning)
 
 
 CALCED_INTERSECTIONS = {}
 CALCED_GRAPHS = {}
 
-THRESHOLD_SUPPORT = 0.01
+THRESHOLD_SUPPORT = 0.05
 K = 5
-THRESHOLD = 0.25
+THRESHOLD = 0.55
 
 
-def algorithm(D: Dataset, k=K, threshold_support=THRESHOLD_SUPPORT, threshold=THRESHOLD):
+def algorithm(D: Dataset, k=K, threshold_support=THRESHOLD_SUPPORT, jaccard_threshold=THRESHOLD, num_clusters=2*K, treatments_func=None):
+    s1 = time()
     logging.basicConfig(filename='logs.log', level=logging.INFO)
     # step 1 - get best subpopulation by divexplorer
     df_clean = pd.read_csv(D.clean_path)
     max_outcome = max(df_clean[D.outcome_col])
-    need_sample = len(df_clean) > 80000
+    need_sample = len(df_clean) > 50000
     if need_sample:
         length = df_clean.loc[df_clean['group1']==1].shape[0]
-        df_group1 = df_clean.loc[df_clean['group1']==1].sample(n=min(40000, length), random_state=42)
-        df_group2 = df_clean.loc[df_clean['group2']==1].sample(n=40000, random_state=42)
+        df_group1 = df_clean.loc[df_clean['group1']==1].sample(n=min(25000, length), random_state=42)
+        df_group2 = df_clean.loc[df_clean['group2']==1].sample(n=25000, random_state=42)
         df_sample = pd.concat([df_group1, df_group2])
         df_sample.to_csv(f"outputs/{D.name}/sample_data.csv", index=False)
         original_clean_path = D.clean_path
@@ -54,19 +61,36 @@ def algorithm(D: Dataset, k=K, threshold_support=THRESHOLD_SUPPORT, threshold=TH
     if D.need_filter_subpopulations:
         subgroups['condition'] = subgroups.apply(lambda row: D.func_filter_subs(row[f'{D.outcome_col}_group1'], row[f'{D.outcome_col}_group2']), axis=1)
         subgroups = subgroups.loc[subgroups['condition']==True]
-    subgroups.sort_values(by="support", ascending=False, ignore_index=True).head(200).to_csv(f"outputs/{D.name}/interesting_subpopulations.csv", index=False)
+    subgroups[f'{D.outcome_col}_div'] = abs(subgroups[f'{D.outcome_col}_div'])
+    subgroups_filtered = subgroups[subgroups['support'] > threshold_support]
+    subgroups_filtered.sort_values(by=f'support', ascending=False, ignore_index=True).to_csv(f"outputs/{D.name}/interesting_subpopulations.csv", index=False)
+    s2 = time()
+    print(f"step1 took {s2-s1} seconds")
     # step 2 - find the best treatment for each subpopulation
-    df_treatments = find_best_treatment(D)
+    if not treatments_func:
+        df_treatments = find_best_treatment(D, max_outcome)
+    else:
+        df_treatments = treatments_func(D, max_outcome)
     if len(df_treatments) == 0:
-        return None
-    df_treatments.to_csv(f"outputs/{D.name}/subpopulations_and_treatments.csv", index=False)
+        return 0
+    pd.DataFrame(df_treatments).to_csv(f"outputs/{D.name}/subpopulations_and_treatments.csv", index=False)
+    logger.info(f"Saved results to outputs/{D.name}/subpopulations_and_treatments.csv")
     if need_sample:
         D.clean_path = original_clean_path
     logger.critical('Finished')
-    # step 3 - find the best group with greedy algorithm
-    calc_facts_metrics(D).to_csv(f"outputs/{D.name}/all_facts.csv", index=False)
-    r = find_group(D, k, max_outcome, threshold)
-    return r #, (e1-s), (e2-e1), (e3-e2), (e3-s)
+    s3 = time()
+    print(f"step2 took {s3-s2} seconds")
+    #step 3 - clustering
+    try:
+        selected_df = clustering(D, k=k, jaccard_threshold=jaccard_threshold, num_clusters=num_clusters)
+        selected_df[['subpop', 'treatment_combo', 'ate1', 'ate2', 'score', 'cluster']].to_csv(f"outputs/{D.name}/clustering_results.csv", index=False)
+        jaccard_matrix = print_matrix(D, {}, {}, [[x['subpop'], x['indices']] for _, x in selected_df.iterrows()])
+        jaccard_matrix.to_csv(f"outputs/{D.name}/jaccard_matrix.csv", quoting=csv.QUOTE_NONNUMERIC)
+        s4 = time()
+        print(f"step3 took {s4-s3} seconds")
+        return sum(selected_df['score'])
+    except Exception as e:
+        return 0
 
 
 from cleaning_datasets.clean_meps import filter_facts as meps_filter_facts
@@ -79,10 +103,10 @@ meps = Dataset(name="meps", outcome_col="FeltNervous",
                                'IsDiagnosedAsthma', 'IsBornInUSA', 'DoesDoctorRecommendExercise'],
                columns_to_ignore=[], clean_path="outputs/meps/clean_data.csv",
                func_filter_subs=meps_filter_facts, func_filter_treats=meps_filter_facts, need_filter_subpopulations=True, need_filter_treatments=True,
-               dag_file="data/meps/causal_dag.txt")
+               dag_file="data/meps/causal_graph.dot")
 so = Dataset(name="so", outcome_col="ConvertedSalary",
                treatments=['YearsCodingProf', 'Hobby', 'FormalEducation', 'WakeTime', 'HopeFiveYears', 'Dependents',
-                           'HoursComputer', 'UndergradMajor', 'CompanySize'],
+                           'HoursComputer', 'UndergradMajor', 'CompanySize', 'Student', 'Exercise'],
                subpopulations=['Gender', 'Age', 'RaceEthnicity_BlackorofAfricandescent', 'RaceEthnicity_EastAsian',
                                'RaceEthnicity_HispanicorLatino/Latina', 'RaceEthnicity_MiddleEastern',
                                'RaceEthnicity_NativeAmerican,PacificIslander,orIndigenousAustralian',
@@ -93,31 +117,44 @@ so = Dataset(name="so", outcome_col="ConvertedSalary",
                                   'RaceEthnicity_NativeAmerican,PacificIslander,orIndigenousAustralian=0',
                                   'RaceEthnicity_SouthAsian=0', 'RaceEthnicity_WhiteorofEuropeandescent=0'],
              clean_path="outputs/so/clean_data.csv", func_filter_subs=so_filter_facts, func_filter_treats=so_filter_facts, need_filter_subpopulations=True, need_filter_treatments=True,
-             dag_file="data/so/causal_dag.txt")
-acs = Dataset(name="acs", outcome_col="Health insurance coverage recode",
-              treatments=['Temporary absence from work', 'Worked last week',
-                          'Widowed in the past 12 months', "Total person earnings",
-                          'Educational attainment', 'Gave birth within past year', "Field of degree - Science and Engineering flag"],
-              subpopulations=['Sex', 'Age', 'With a disability', "Race/Ethnicity",
-                              'Region', 'Language other than English spoken at home', 'state code',
-                              'Marital status', 'Nativity', 'Related child'],
+             dag_file="data/so/causal_graph.dot")
+acs = Dataset(name="acs", outcome_col="HealthInsuranceCoverageRecode",
+              treatments=['TemporaryAbsenceFromWork', 'WorkedLastWeek',
+                          "TotalPersonEarnings", "UsualHoursWorkedPerWeekPast12Months", 'PersonWeight',
+                          'EducationalAttainment', 'GaveBirthWithinPastYear', "FieldOfDegreeScienceAndEngineeringFlag",
+                          'SchoolEnrollment'],
+              subpopulations=['Sex', 'Age', 'WithADisability', "RaceEthnicity",
+                              'Region', 'LanguageOtherThanEnglishSpokenAtHome', 'StateCode',
+                              'MaritalStatus', 'Nativity', 'RelatedChild', 'CitizenshipStatus'],
               columns_to_ignore=[], clean_path="outputs/acs/clean_data.csv", func_filter_subs=acs_filter_subs, need_filter_subpopulations=True, need_filter_treatments=True,
-              func_filter_treats=acs_filter_treats, dag_file="data/acs/causal_dag.txt")
-import time
+              func_filter_treats=acs_filter_treats, dag_file="data/acs/causal_graph.dot")
+
 if __name__ == "__main__":
-    start2 = time.time()
-    # r=algorithm(D=meps)
-    # e12 = time.time()
-    # print(f"meps took {e12 - start2}")
-    # r=algorithm(D=so)
-    # e22 = time.time()
-    # print(f"so took {e22 - e12}")
-    # r = algorithm(D=acs)
-    # e32 = time.time()
-    # print(f"acs took {e32 - e22}")
-    """
-acs took 1725.8723595142365
-meps took 121.82038521766663
-so took 450.9267861843109
-    """
+    r = 0
+    start2 = time()
+    try:
+        r = 0
+        r=algorithm(D=meps)
+    except Exception:
+        print("fail run meps")
+    e12 = time()
+    print(f"result for meps: {r}")
+    print(f"meps took {e12 - start2}")
+    try:
+        r = 0
+        r=algorithm(D=so)
+    except Exception:
+        print("fail run so")
+    e22 = time()
+    print(f"result for so: {r}")
+    print(f"so took {e22 - e12}")
+    try:
+        r = algorithm(D=acs)
+    except Exception:
+        print("fail run acs")
+    e32 = time()
+    print(f"result for acs: {r}")
+    print(f"acs took {e32 - e22}")
+
+
 
