@@ -35,11 +35,13 @@ def build_mini_df():
                     )
     df = df.dropna(subset=['ConvertedSalary'])
     df = df[['group1', 'group2', 'Gender', 'Age', 'RaceEthnicity_BlackorofAfricandescent', 'RaceEthnicity_EastAsian',
-            'RaceEthnicity_HispanicorLatino/Latina', 'RaceEthnicity_MiddleEastern',
-            'RaceEthnicity_NativeAmerican,PacificIslander,orIndigenousAustralian',
-            'RaceEthnicity_SouthAsian', 'RaceEthnicity_WhiteorofEuropeandescent', 'Country', 'SexualOrientation', 'EducationParents',
-            'YearsCodingProf', 'HopeFiveYears', 'JobSatisfaction', 'Hobby', 'Student',
-            'FormalEducation', 'WakeTime', 'Exercise', 'Dependents', 'HoursComputer', 'UndergradMajor', 'CompanySize', 'ConvertedSalary']]
+                               'RaceEthnicity_HispanicorLatino/Latina', 'RaceEthnicity_MiddleEastern',
+                               'RaceEthnicity_NativeAmerican,PacificIslander,orIndigenousAustralian',
+                               'RaceEthnicity_SouthAsian', 'RaceEthnicity_WhiteorofEuropeandescent', 'Country',
+                               'SexualOrientation', 'EducationParents',
+            'YearsCodingProf', 'Hobby', 'FormalEducation', 'WakeTime', 'HopeFiveYears', 'Dependents',
+                           'HoursComputer', 'UndergradMajor', 'CompanySize', 'Student', 'Exercise', 'ConvertedSalary']]
+    df = df.loc[(df['group1']==1) | (df['group2']==1)]
 
     return df
 

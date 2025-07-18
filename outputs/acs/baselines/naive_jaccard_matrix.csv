@@ -1,3 +1,6 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:9c9eda7a413fbac7845e12446cf4b2ad30895fd0914bac3d4c5f1a96248449bc
-size 631
+"","{'CitizenshipStatus': 'Born in the U.S.', 'Nativity': 'yes'}","{'CitizenshipStatus': 'Born in the U.S.', 'Nativity': 'yes', 'Region': 'South'}","{'RaceEthnicity': 'White alone', 'Region': 'South', 'Sex': 'Man'}","{'RaceEthnicity': 'White alone', 'CitizenshipStatus': 'Born in the U.S.', 'Region': 'South', 'StateCode': 'Texas'}","{'RaceEthnicity': 'White alone', 'LanguageOtherThanEnglishSpokenAtHome': 'Spanish', 'Region': 'South'}"
+"{'CitizenshipStatus': 'Born in the U.S.', 'Nativity': 'yes'}",1.0,0.3316,0.1733,0.1614,0.0378
+"{'CitizenshipStatus': 'Born in the U.S.', 'Nativity': 'yes', 'Region': 'South'}",0.3316,1.0,0.4729,0.4866,0.1012
+"{'RaceEthnicity': 'White alone', 'Region': 'South', 'Sex': 'Man'}",0.1733,0.4729,1.0,0.3653,0.2674
+"{'RaceEthnicity': 'White alone', 'CitizenshipStatus': 'Born in the U.S.', 'Region': 'South', 'StateCode': 'Texas'}",0.1614,0.4866,0.3653,1.0,0.1358
+"{'RaceEthnicity': 'White alone', 'LanguageOtherThanEnglishSpokenAtHome': 'Spanish', 'Region': 'South'}",0.0378,0.1012,0.2674,0.1358,1.0

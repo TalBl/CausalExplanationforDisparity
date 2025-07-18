@@ -1,3 +1,6 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:45271887e7c0e240b137abab67915cc832ae6c814bbbe96cf8ae42cbeb863c4c
-size 4871
+"","{'LanguageOtherThanEnglishSpokenAtHome': 'Spanish', 'RaceEthnicity': 'White alone', 'Region': 'South'}","{'Region': 'South', 'CitizenshipStatus': 'Born in the U.S.'}","{'CitizenshipStatus': 'Born in the U.S.', 'RaceEthnicity': 'White alone', 'Nativity': 'yes', 'StateCode': 'Texas'}","{'Region': 'South', 'Sex': 'Man', 'RaceEthnicity': 'White alone'}","{'CitizenshipStatus': 'Born in the U.S.'}"
+"{'LanguageOtherThanEnglishSpokenAtHome': 'Spanish', 'RaceEthnicity': 'White alone', 'Region': 'South'}",1.0,0.0971,0.1343,0.1738,0.0342
+"{'Region': 'South', 'CitizenshipStatus': 'Born in the U.S.'}",0.0971,1.0,0.4759,0.3735,0.3304
+"{'CitizenshipStatus': 'Born in the U.S.', 'RaceEthnicity': 'White alone', 'Nativity': 'yes', 'StateCode': 'Texas'}",0.1343,0.4759,1.0,0.3257,0.1572
+"{'Region': 'South', 'Sex': 'Man', 'RaceEthnicity': 'White alone'}",0.1738,0.3735,0.3257,1.0,0.1291
+"{'CitizenshipStatus': 'Born in the U.S.'}",0.0342,0.3304,0.1572,0.1291,1.0

@@ -1,3 +1,25 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:bec9bc46d22f17c64968c62665ee64286470ac97e5bfaa1162f093910cd30d2a
-size 9234
+subpop,treatment_combo,ate1,p-value1,ate2,p-value2,score
+{'RaceEthnicity': 'White alone'},"(('WorkedLastWeek', 'yes'),)",0.01609150374807311,0.0047363177362543165,-0.007729797342731937,0.035827227095629896,0.023821301090805047
+{'CitizenshipStatus': 'Born in the U.S.'},"(('TotalPersonEarnings', '<0.00'),)",-0.03462405903504029,5.812863543151379e-06,0.013608642275068417,0.0004200705948958489,0.048232701310108705
+"{'CitizenshipStatus': 'Born in the U.S.', 'Nativity': 'yes'}","(('TotalPersonEarnings', '<0.00'),)",-0.0346240590350404,5.81286354315248e-06,0.013608642275064975,0.00042007059489730403,0.048232701310105375
+{'Nativity': 'yes'},"(('TotalPersonEarnings', '<0.00'),)",-0.03323989240846292,1.166723832611726e-05,0.01490433265325064,9.999121676316488e-05,0.048144225061713564
+"{'WithADisability': 'no', 'RaceEthnicity': 'White alone'}","(('TotalPersonEarnings', '<0.00'),)",-0.026082648626447047,0.005919396408623488,0.009973494928804394,0.04304706490890827,0.03605614355525144
+"{'WithADisability': 'no', 'CitizenshipStatus': 'Born in the U.S.', 'RaceEthnicity': 'White alone'}","(('WorkedLastWeek', 'no'),)",-0.016221260710954755,0.03372488550343296,0.009583602254579549,0.03260121499355159,0.025804862965534303
+"{'Sex': 'Man', 'RaceEthnicity': 'White alone', 'CitizenshipStatus': 'Born in the U.S.', 'Nativity': 'yes'}","(('TotalPersonEarnings', '<0.00'),)",-0.01752716933204468,0.04865532036579845,0.01522527503381954,0.007489006255054783,0.03275244436586422
+"{'Sex': 'Man', 'CitizenshipStatus': 'Born in the U.S.', 'RaceEthnicity': 'White alone'}","(('TotalPersonEarnings', '<0.00'),)",-0.017527169332044346,0.0486553203658045,0.01522527503381954,0.007489006255055182,0.032752444365863886
+{'Region': 'South'},"(('TotalPersonEarnings', '<0.00'),)",-0.053109549135459844,0.0001614247118720009,0.024342642650751145,0.001280951012798634,0.07745219178621099
+"{'Nativity': 'yes', 'Region': 'South'}","(('TotalPersonEarnings', '<0.00'),)",-0.05765106600834902,0.00019090972153303914,0.021721210511932987,0.006935078089298062,0.079372276520282
+"{'Region': 'South', 'CitizenshipStatus': 'Born in the U.S.'}","(('TotalPersonEarnings', '<0.00'),)",-0.06386049306660391,4.307678979171764e-05,0.018324353598304643,0.024338193360430166,0.08218484666490855
+"{'Nativity': 'yes', 'CitizenshipStatus': 'Born in the U.S.', 'Region': 'South'}","(('TotalPersonEarnings', '<0.00'),)",-0.06386049306660324,4.307678979172457e-05,0.018324353598304977,0.02433819336042842,0.08218484666490822
+"{'WithADisability': 'no', 'Region': 'South', 'Nativity': 'yes', 'RaceEthnicity': 'White alone'}","(('TotalPersonEarnings', '<0.00'),)",-0.04175006478976129,0.0393349782782099,0.02118439006663997,0.04152773313977938,0.06293445485640126
+"{'Region': 'South', 'Sex': 'Man', 'RaceEthnicity': 'White alone'}","(('TotalPersonEarnings', '<0.00'),)",-0.041528623885950244,0.01703278310564464,0.026824535482428802,0.018610640817488918,0.06835315936837905
+"{'RaceEthnicity': 'White alone', 'StateCode': 'Texas', 'Region': 'South'}","(('TotalPersonEarnings', '<0.00'),)",-0.05065303811194244,0.018267140679540012,0.028173139034993744,0.016235467033911436,0.07882617714693618
+"{'StateCode': 'Texas', 'RaceEthnicity': 'White alone'}","(('TotalPersonEarnings', '<0.00'),)",-0.05062393445952784,0.018554309130259922,0.02834433146953952,0.01549500270316915,0.07896826592906736
+"{'RaceEthnicity': 'White alone', 'Nativity': 'yes', 'StateCode': 'Texas', 'Region': 'South'}","(('TotalPersonEarnings', '<0.00'),)",-0.048723360545240624,0.03903207167072959,0.030487787368025265,0.012549923078445505,0.07921114791326589
+"{'Nativity': 'yes', 'StateCode': 'Texas', 'RaceEthnicity': 'White alone'}","(('TotalPersonEarnings', '<0.00'),)",-0.04872336054524029,0.03903207167073029,0.030487787368025265,0.012549923078445505,0.07921114791326556
+"{'CitizenshipStatus': 'Born in the U.S.', 'RaceEthnicity': 'White alone', 'Nativity': 'yes', 'StateCode': 'Texas'}","(('TotalPersonEarnings', '<0.00'),)",-0.05201168488798602,0.02833927146899207,0.028348858915295372,0.020903307187541225,0.08036054380328139
+"{'Region': 'South', 'StateCode': 'Texas', 'CitizenshipStatus': 'Born in the U.S.', 'RaceEthnicity': 'White alone'}","(('TotalPersonEarnings', '<0.00'),)",-0.052011684887985354,0.02833927146899441,0.028348858915295594,0.02090330718754091,0.08036054380328095
+"{'StateCode': 'Texas', 'RaceEthnicity': 'White alone', 'CitizenshipStatus': 'Born in the U.S.'}","(('TotalPersonEarnings', '<0.00'),)",-0.0520116848879858,0.028339271468992674,0.028348858915295372,0.020903307187541933,0.08036054380328117
+"{'Nativity': 'yes', 'Region': 'South', 'CitizenshipStatus': 'Born in the U.S.', 'StateCode': 'Texas', 'RaceEthnicity': 'White alone'}","(('TotalPersonEarnings', '<0.00'),)",-0.05201168488798524,0.02833927146899475,0.028348858915295594,0.020903307187540385,0.08036054380328084
+"{'LanguageOtherThanEnglishSpokenAtHome': 'Spanish', 'Region': 'South'}","(('TotalPersonEarnings', '<0.00'),)",-0.07216294384011612,0.011508951495798567,0.03874233902854629,0.025898069785892628,0.11090528286866241
+"{'LanguageOtherThanEnglishSpokenAtHome': 'Spanish', 'RaceEthnicity': 'White alone', 'Region': 'South'}","(('TotalPersonEarnings', '<0.00'),)",-0.0774170737897949,0.0159584297540935,0.0487019100733318,0.011375719590363284,0.1261189838631267

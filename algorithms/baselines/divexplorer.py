@@ -2,10 +2,6 @@ import networkx as nx
 
 from algorithms.final_algorithm.find_best_treatment import process_subpopulation, modify_graph_on_demand, prune_graph
 from algorithms.final_algorithm.new_greedy import get_intersection, get_union, ni_score, print_matrix
-from algorithms.final_algorithm.find_treatment_new import findBestTreatment, get_subpopulation, changeDAG, calc_dag
-from cleaning_datasets.clean_so import filter_facts as so_filter_facts
-from cleaning_datasets.clean_meps import filter_facts as meps_filter_facts
-from cleaning_datasets.clean_acs import filter_subs as acs_filter_subs, filter_treats as acs_filter_treats
 import pandas as pd
 import numpy as np
 from algorithms.divexplorer.divexplorer import DivergenceExplorer
@@ -17,10 +13,13 @@ import csv
 from tqdm import tqdm
 
 
-THRESHOLD_SUPPORT = 0.01
+THRESHOLD_SUPPORT = 0.05
 ALPHA = 0.5
 K = 5
 THRESHOLD = 0.55
+
+def naive_filter(n1, n2):
+    return True
 
 
 def get_score(group, d, calc_intersection, calc_union):
@@ -52,20 +51,34 @@ def run_search(d, k, df_treatments, calc_intersection, calc_union):
         return 0, [], {}
 
 
-def baseline(d: Dataset):
-    if d.name == "acs":
-        d.clean_path = d.clean_path.replace("clean", "sample")
+def baseline(d: Dataset, threshold_support=0.05):
     base_graph = nx.DiGraph(nx.nx_pydot.read_dot(d.dag_file))
     df_clean = pd.read_csv(d.clean_path)
     max_outcome = max(df_clean[d.outcome_col])
-    treatment = process_subpopulation(pd.Series(), d, base_graph, max_outcome)['treatment_combo']
+    treatment = process_subpopulation(pd.Series(), d, nx.DiGraph(nx.nx_pydot.read_dot(d.dag_file)), max_outcome)['treatment_combo']
     print(treatment)
     if len(treatment) == 1:
         causal_graph = f"data/{d.name}/causal_dags_files/graph_{treatment[0][0]}.dot"
     else:
         causal_graph = modify_graph_on_demand(base_graph, treatment)
         causal_graph = prune_graph(causal_graph, "TempTreatment", d.outcome_col)
-    subgroups = pd.read_csv(f"outputs/{d.name}/interesting_subpopulations.csv")
+    if d.name == "acs":
+        d.clean_path = d.clean_path.replace("clean", "sample")
+    df_clean = pd.read_csv(d.clean_path)
+    fp_diver = DivergenceExplorer(df_clean)
+    subgroups = fp_diver \
+        .get_pattern_divergence(min_support=threshold_support, quantitative_outcomes=[d.outcome_col],
+                                group_1_column="group1", group_2_column="group2", attributes=d.subpopulations_atts,
+                                COLUMNS_TO_IGNORE=d.columns_to_ignore) \
+        .sort_values(by="support", ascending=False, ignore_index=True)
+    subgroups = subgroups.dropna()
+    subgroups['condition'] = subgroups.apply(
+            lambda row: d.func_filter_subs(row[f'{d.outcome_col}_group1'], row[f'{d.outcome_col}_group2']), axis=1)
+    subgroups = subgroups.loc[subgroups['condition'] == True]
+    subgroups_filtered = subgroups[subgroups['support'] > threshold_support]
+    subgroups_filtered.sort_values(by=f'support', ascending=False, ignore_index=True).to_csv(
+        f"outputs/{d.name}/baselines/de_baseline_interesting_subpopulations.csv", index=False)
+    subgroups = pd.read_csv(f"outputs/{d.name}/baselines/de_baseline_interesting_subpopulations.csv")
     res = []
     for s in tqdm(subgroups.iterrows(), total=subgroups.shape[0]):
         _, row = s
@@ -95,7 +108,7 @@ def baseline(d: Dataset):
         for x in res_group:
             _, row = x
             g.append(row)
-    jaccard_matrix = print_matrix(d, calc_intersection, calc_union, [[x['subpop'], x['indices']] for x in g])
+    jaccard_matrix = print_matrix(calc_intersection, calc_union, [[x['subpop'], x['indices']] for x in g])
     jaccard_matrix.to_csv(f"outputs/{d.name}/baselines/de_jaccard_matrix.csv", quoting=csv.QUOTE_NONNUMERIC)
     pd.DataFrame(g).to_csv(f'outputs/{d.name}/baselines/facts_de.csv', index=False)
     pd.DataFrame([scores_dict]).to_csv(f'outputs/{d.name}/baselines/de_scores.csv', index=False)
@@ -107,14 +120,10 @@ start = time.time()
 baseline(so)
 e1 = time.time()
 print(f"so took {e1-start}")
-baseline(meps)
+# baseline(meps)
 e2 = time.time()
 print(f"meps took {e2-e1}")
-baseline(acs)
+# baseline(acs)
 e3 = time.time()
 print(f"acs took {e3-e2}")
-"""
-acs took 491.41048097610474
-meps took 3.6268370151519775
-so took 83.07054781913757
-"""
+

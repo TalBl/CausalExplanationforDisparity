@@ -1,3 +1,3 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:5ddd9a6926c1a186843b31557be28b60514a52616d393de204fec3e64d96b1d9
-size 1221
+subpop,treatment,ate1,ate2,score,avg_group1,avg_group2,size,support
+{'Region': 'South'},"(('TotalPersonEarnings', '<0.00'),)",-0.052578626058782385,0.024309807586082144,0.07688843364486453,0.658567504753856,0.7578299120234604,17050,0.341
+{'CitizenshipStatus': 'Born in the U.S.'},"(('TotalPersonEarnings', '<0.00'),)",-0.0346240590350394,0.013608642275064198,0.0482327013101036,0.8411496105291432,0.8897610741093139,37836,0.75672

@@ -1,3 +1,6 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:858fb43e0d83a5e11f5983838533349bd1ebf1c08861db54a46e6f233f4130e2
-size 1074
+subpop,treatment_combo,ate1,p-value1,ate2,p-value2,score
+"{'DoesDoctorRecommendExercise': 0.0, 'Region': 'South', 'IsDiagnosedDiabetes': 0.0, 'MaritalStatus': 'NeverMarried'}","(('CurrentlySmoke', 0),)",-0.1306654567774933,0.0255734171095091,-0.2073261040911043,0.0072284925627225,0.076660647313611
+"{'IsDiagnosedDiabetes': 0.0, 'IsDiagnosedAsthma': 0.0, 'Age': '<30.00', 'Race': 'White', 'MaritalStatus': 'NeverMarried'}","(('HoldHealthInsurance', 3),)",-0.1416724767368278,0.0125125533496337,-0.1848998747732845,0.0038665847173521,0.0432273980364567
+"{'DoesDoctorRecommendExercise': 0.0, 'IsBornInUSA': 1.0, 'MaritalStatus': 'NeverMarried'}","(('HoldHealthInsurance', 1),)",0.1084505056734337,0.0028159444129216,0.0751007806682718,0.0375253998955644,0.0333497250051618
+"{'MaritalStatus': 'NeverMarried', 'DoesDoctorRecommendExercise': 0.0, 'Race': 'White', 'IsDiagnosedAsthma': 0.0}","(('HoldHealthInsurance', 3),)",-0.1252704713378061,0.0152997644562896,-0.1409494960905764,0.0239525623796086,0.0156790247527702
+"{'Age': '30.00-42.00', 'IsDiagnosedDiabetes': 0.0}","(('Exercise', 0.0),)",0.0747445301170718,0.014428194484938,0.0647894568037672,0.0088080042438566,0.0099550733133046

@@ -1,7 +1,8 @@
 import os
 import pandas as pd
 import numpy as np
-from folktables import ACSDataSource
+import re
+# from folktables import ACSDataSource
 def get_Multiple_States_2018_All(state_code_list=["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
                                                   "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
                                                   "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
@@ -104,38 +105,6 @@ def convert_df_clean(df, dict_translation):
             else:
                 df_new[new_column_name] = df[column]
     return df_new
-SUBPOPULATIONS = ['Ancestry recode', 'Region', 'Available for Work',
-                  'Ancestry recode - first entry', 'Self-employment income past 12 months',
-                  'Language other than English spoken at home', 'Citizenship status', 'Retirement income past 12 months',
-                  'All other income past 12 months',
-                  'Percent of poverty status', 'Marital status', 'Social Security income past 12 months',
-                  "Person's weight replicate 4", 'Number of times married', 'Adjustment factor for income and earnings dollar amounts',
-                  'Mobility status (lived here 1 year ago)', 'Usual hours worked per week past 12 months', 'Vision difficulty', 'Related child',
-                  'When last worked', 'Ancestry recode - second entry', 'Hearing difficulty', 'Raw labor-force status',
-                  'Medicare, for people 65 and older, or people with certain disabilities', 'person weight', 'VA (Health Insurance through VA Health Care)',
-                  'Self-care difficulty', 'Interest, dividends, and net rental income past 12 months',
-                  "Person's weight replicate 2", "Total person's income", 'state code', 'Married, spouse present/spouse absent',
-                  'Married in the past 12 months', 'Ambulatory difficulty', 'Health insurance coverage recode', 'Supplementary Security Income past 12 months',
-                  'Divorced in the past 12 months', "Person's weight replicate 3", 'Independent living difficulty', 'Widowed in the past 12 months',
-                  'Georgraphic division', 'Public assistance income past 12 months', "Person's weight replicate 1", "Person's weight replicate 5",
-                  'Medicaid, Medical Assistance, or any kind of government-assistance plan for those with low incomes or a disability']
-
-TREATMENTS = ['Educational attainment', 'Wages or salary income past 12 months',
-              'Sex', 'Quarter of birth', 'Insurance purchased directly from an insurance company',
-              'Year last married', 'Temporary absence from work', 'Informed of recall',
-              'Age', 'With a disability', 'Indian Health Service', 'Place of birth', 'On layoff from work',
-              'Weeks worked during past 12 months', 'Hispanic, Detailed', 'Relationship to reference person',
-              'Insurance through a current or former employer or union', 'Nativity', 'Cognitive difficulty', 'Looking for work',
-              "Total person's earnings", 'Class of Worker', 'School enrollment', 'TRICARE or other military health care',
-              'Occupation recode', 'Worked last week']
-
-SUBPOPULATIONS = ['Sex', 'Age', 'With a disability', 'Place of birth', 'School enrollment', 'Cognitive difficulty',
-                  'Region', 'Language other than English spoken at home', 'Citizenship status', 'state code',
-                  'Percent of poverty status', 'Marital status', 'Hearing difficulty', 'Related child', 'Nativity']
-
-TREATMENTS = ['Wages or salary income past 12 months', 'Temporary absence from work', "Total person's earnings", 'Occupation recode', 'Worked last week',
-              'Insurance purchased directly from an insurance company', 'Indian Health Service', 'Class of Worker', 'Informed of recall', 'Educational attainment',
-              'Insurance through a current or former employer or union']
 
 education_mapping = {
     'No schooling completed': 'No Formal Education',
@@ -193,6 +162,13 @@ occupation_mapping = {
     'LGL': 'Legal',
 }
 
+def sanitize_name(name):
+    # Remove everything except letters, numbers, and spaces
+    name = re.sub(r'[^a-zA-Z0-9 ]', '', name)
+    # Convert to CamelCase
+    parts = name.split()
+    return ''.join(part.capitalize() for part in parts)
+
 def clean_and_transform_data():
     cleaned_df = pd.read_csv("outputs/acs/2018_all_data_clean.csv")
     cleaned_df['Total person earnings'] = cleaned_df["Total person's earnings"]
@@ -236,15 +212,29 @@ def clean_and_transform_data():
     #cleaned_df['group1'] = cleaned_df['Race/Ethnicity'].apply(lambda x: 1 if x != "White alone" else 0)
     cleaned_df['group1'] = cleaned_df['Occupation recode'].apply(lambda x: 1 if x in ["Cleaning and Maintenance", "Farming, Fishing, and Forestry", "Repair and Maintenance", "Construction"] else 0)
     cleaned_df['group2'] = 1
-    cleaned_df = cleaned_df[['Temporary absence from work', 'Worked last week', "person weight",
-                             'Widowed in the past 12 months', "Total person earnings",
-                             'Educational attainment', 'Georgraphic division', 'Sex', 'Age', 'With a disability', "Race/Ethnicity",
-                             'Region', 'Language other than English spoken at home', 'state code',
-                             'Marital status', 'Nativity', 'Related child', 'group1', 'group2', 'Health insurance coverage recode',
-                             'Gave birth within past year', 'Field of degree - Science and Engineering flag']]
+    # cleaned_df = cleaned_df[['Temporary absence from work', 'Worked last week', "person weight",
+    #                          'Usual hours worked per week past 12 months', "Total person earnings",
+    #                          'Educational attainment', 'Georgraphic division', 'Sex', 'Age', 'With a disability', "Race/Ethnicity",
+    #                          'Region', 'Language other than English spoken at home', 'state code',
+    #                          'Marital status', 'Nativity', 'Related child', 'group1', 'group2', 'Health insurance coverage recode',
+    #                          'Gave birth within past year', 'Field of degree - Science and Engineering flag',
+    #                          'person weight', 'School enrollment']]
+    df_sanitized = cleaned_df.copy()
+    df_sanitized.columns = [
+        sanitize_name(col) if col not in ["group1", "group2"] else col
+        for col in cleaned_df.columns
+    ]
+    df_sanitized['RaceEthnicity'] = df_sanitized['Raceethnicity']
+    df_sanitized = df_sanitized[['group1', 'group2', 'Sex', 'Age', 'WithADisability', "RaceEthnicity",
+                              'Region', 'LanguageOtherThanEnglishSpokenAtHome', 'StateCode',
+                              'MaritalStatus', 'Nativity', 'RelatedChild', 'CitizenshipStatus',
+                            'TemporaryAbsenceFromWork', 'WorkedLastWeek',
+                          "TotalPersonEarnings", "UsualHoursWorkedPerWeekPast12Months", 'PersonWeight',
+                          'EducationalAttainment', 'GaveBirthWithinPastYear', "FieldOfDegreeScienceAndEngineeringFlag",
+                          'SchoolEnrollment', 'HealthInsuranceCoverageRecode']]
     #threshold = 0.5 * len(cleaned_df)  # 50% of the number of rows
     #cleaned_df = cleaned_df.loc[:, cleaned_df.isnull().sum() <= threshold]
-    return cleaned_df
+    return df_sanitized
 
 
 

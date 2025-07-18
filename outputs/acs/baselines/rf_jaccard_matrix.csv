@@ -1,3 +1,3 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:ffe4030944844fc81e4edb2a62276f9c7ce47f84d844bcfd3115b88dee691dbd
-size 375
+"","{'CitizenshipStatus': 'Born in the U.S.'}","{'Region': 'South'}"
+"{'CitizenshipStatus': 'Born in the U.S.'}",1.0,0.2963
+"{'Region': 'South'}",0.2963,1.0

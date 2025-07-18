@@ -1,3 +1,6 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:c9a44c1d1a1f629e8b1846b043df88aaf56cec6402eccfc77baf3017ecdb4f56
-size 991
+"","{'DoesDoctorRecommendExercise': 0.0, 'Region': 'South', 'IsDiagnosedDiabetes': 0.0, 'MaritalStatus': 'NeverMarried'}","{'MaritalStatus': 'NeverMarried', 'IsDiagnosedAsthma': 0.0, 'Region': 'South', 'IsDiagnosedDiabetes': 0.0, 'DoesDoctorRecommendExercise': 0.0}","{'DoesDoctorRecommendExercise': 0.0, 'MaritalStatus': 'NeverMarried', 'Region': 'South'}","{'DoesDoctorRecommendExercise': 0.0, 'Region': 'South', 'MaritalStatus': 'NeverMarried', 'IsDiagnosedAsthma': 0.0}","{'IsDiagnosedDiabetes': 0.0, 'IsDiagnosedAsthma': 0.0, 'Age': '<30.00', 'Race': 'White', 'MaritalStatus': 'NeverMarried'}"
+"{'DoesDoctorRecommendExercise': 0.0, 'Region': 'South', 'IsDiagnosedDiabetes': 0.0, 'MaritalStatus': 'NeverMarried'}",1.0,0.917,0.9824,0.9043,0.1523
+"{'MaritalStatus': 'NeverMarried', 'IsDiagnosedAsthma': 0.0, 'Region': 'South', 'IsDiagnosedDiabetes': 0.0, 'DoesDoctorRecommendExercise': 0.0}",0.917,1.0,0.9009,0.9849,0.1585
+"{'DoesDoctorRecommendExercise': 0.0, 'MaritalStatus': 'NeverMarried', 'Region': 'South'}",0.9824,0.9009,1.0,0.9147,0.151
+"{'DoesDoctorRecommendExercise': 0.0, 'Region': 'South', 'MaritalStatus': 'NeverMarried', 'IsDiagnosedAsthma': 0.0}",0.9043,0.9849,0.9147,1.0,0.1574
+"{'IsDiagnosedDiabetes': 0.0, 'IsDiagnosedAsthma': 0.0, 'Age': '<30.00', 'Race': 'White', 'MaritalStatus': 'NeverMarried'}",0.1523,0.1585,0.151,0.1574,1.0

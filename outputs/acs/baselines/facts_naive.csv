@@ -1,3 +1,6 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:3bf764026fb03acf718fa4148436e7cc6461210965a33fa5c109d994165d0748
-size 923
+subpop,treatment_combo,ate1,p-value1,ate2,p-value2,score
+"{'CitizenshipStatus': 'Born in the U.S.', 'Nativity': 'yes', 'Region': 'South'}","(('TemporaryAbsenceFromWork', 'Did not report'), ('SchoolEnrollment', 'No, has not attended in the last 3 months'))",0.0958720750675937,0.032060753113065,-0.0422351113971151,0.0323294185394686,0.1381071864647088
+"{'RaceEthnicity': 'White alone', 'LanguageOtherThanEnglishSpokenAtHome': 'Spanish', 'Region': 'South'}","(('TotalPersonEarnings', '<0.00'),)",-0.0774170737897946,0.0159584297540937,0.0487019100733319,0.011375719590363,0.1261189838631266
+"{'RaceEthnicity': 'White alone', 'CitizenshipStatus': 'Born in the U.S.', 'Region': 'South', 'StateCode': 'Texas'}","(('TotalPersonEarnings', '<0.00'),)",-0.0520116848879855,0.0283392714689935,0.0283488589152959,0.0209033071875389,0.0803605438032815
+"{'RaceEthnicity': 'White alone', 'Region': 'South', 'Sex': 'Man'}","(('TotalPersonEarnings', '<0.00'),)",-0.0419549662354462,0.0159738407371996,0.0268145367737824,0.0186382515639738,0.0687695030092286
+"{'CitizenshipStatus': 'Born in the U.S.', 'Nativity': 'yes'}","(('TemporaryAbsenceFromWork', 'Did not report'), ('SchoolEnrollment', 'No, has not attended in the last 3 months'))",0.0495761936863317,0.012048497961146,-0.019100491463456,0.0306869591449401,0.0686766851497877

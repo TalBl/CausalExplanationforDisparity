@@ -14,12 +14,6 @@ import logging
 logger = logging.getLogger(__name__)
 import signal
 
-class TimeoutException(Exception):
-    pass
-
-def handler(signum, frame):
-    raise TimeoutException("Estimation timed out")
-
 MAX_K=7
 MIN_SIZE_FOR_TREATED_GROUP = 50
 P_VALUE_THRESHOLD = 0.05
@@ -71,11 +65,6 @@ def get_subpopulation_df(d: Dataset, elements: dict):
     return df
 
 def getTreatmentATE(df_group, causal_graph, treatments, outcome_col):
-    # Set the signal handler
-    signal.signal(signal.SIGALRM, handler)
-
-    # Set timeout (10 minutes)
-    signal.alarm(600)
     df_group['TempTreatment'] = df_group.apply(lambda row: int(all(row[attr] == val for attr, val in treatments)), axis=1)
     if df_group.loc[df_group['TempTreatment'] == 1].shape[0] < MIN_SIZE_FOR_TREATED_GROUP:
         return None
@@ -91,15 +80,11 @@ def getTreatmentATE(df_group, causal_graph, treatments, outcome_col):
                                                     target_units="ate",
                                                     effect_modifiers=[],
                                                     test_significance=True)
-        signal.alarm(0)
         ate, p_value = causal_estimate_reg.value, causal_estimate_reg.test_stat_significance()['p_value']
         if isinstance(p_value, np.ndarray): # When running on SO data - p_value returned as an array
             p_value = p_value[0]
         if p_value > P_VALUE_THRESHOLD:
             return None
-    except TimeoutException:
-        print("⚠️ Skipped: Estimation took too long (> 10 minutes).")
-        return None
     except Exception as e:
         return None
     return ate, p_value

@@ -1,3 +1,6 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:87782afd907fcc3d4496aa3787d590fc7c39aa4c9cdca24d79a13e33ac8dde69
-size 1387
+subpop,treatment,ate1,ate2,score
+{'Region': 'South'},"(('TotalPersonEarnings', '<0.00'),)",-0.0525817694791785,0.0245035156538372,0.0770852851330158
+"{'Nativity': 'yes', 'Region': 'South', 'WithADisability': 'no', 'RaceEthnicity': 'White alone'}","(('TotalPersonEarnings', '<0.00'),)",-0.041750064789761,0.021184390066639,0.0629344548564001
+"{'Region': 'South', 'Sex': 'Man', 'RaceEthnicity': 'White alone'}","(('TotalPersonEarnings', '<0.00'),)",-0.0422876407706694,0.0268637841805252,0.0691514249511947
+"{'StateCode': 'Texas', 'CitizenshipStatus': 'Born in the U.S.', 'Nativity': 'yes', 'RaceEthnicity': 'White alone'}","(('TotalPersonEarnings', '<0.00'),)",-0.0520116848879854,0.0283488589152958,0.0803605438032812
+"{'LanguageOtherThanEnglishSpokenAtHome': 'Spanish', 'Region': 'South', 'RaceEthnicity': 'White alone'}","(('TotalPersonEarnings', '<0.00'),)",-0.0774170737897949,0.0487019100733319,0.1261189838631268

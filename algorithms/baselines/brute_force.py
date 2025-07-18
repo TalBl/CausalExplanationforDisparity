@@ -18,8 +18,8 @@ import time
 
 warnings.filterwarnings("ignore")
 
-K = 11
-THRESHOLD = 1.0
+K = 5
+THRESHOLD = 0.55
 
 """
 1. for each subpopulation -> find his arg-max treatment
@@ -66,8 +66,8 @@ def baseline(d: Dataset):
         d.clean_path = d.clean_path.replace("clean", "sample")
     data = pd.read_csv(d.clean_path)
     max_outcome = max(data[d.outcome_col])
-    # df_treatments = find_best_treatment(d, max_outcome)
-    # pd.DataFrame(df_treatments).to_csv(f"outputs/{d.name}/naive_subpopulations_and_treatments.csv", index=False)
+    df_treatments = find_best_treatment(d, max_outcome)
+    pd.DataFrame(df_treatments).to_csv(f"outputs/{d.name}/naive_subpopulations_and_treatments.csv", index=False)
     if d.name == "acs":
         d.clean_path = d.clean_path.replace("sample", "clean")
     df_treatments = pd.read_csv(f"outputs/{d.name}/naive_subpopulations_and_treatments.csv")
@@ -78,12 +78,10 @@ def baseline(d: Dataset):
         _, row = x
         g.append(row)
     res_df = pd.DataFrame(g)
-    res_df = res_df.drop(columns=['indices'], axis=1)
-    print(max_score)
-    # res_df.to_csv(f'outputs/{d.name}/baselines/facts_naive.csv', index=False)
-    # pd.DataFrame([scores_dict]).to_csv(f'outputs/{d.name}/baselines/naive_scores.csv')
-    # jaccard_matrix = print_matrix(d, {}, {}, [[x['subpop'], x['indices']] for _, x in pd.DataFrame(g).iterrows()])
-    # jaccard_matrix.to_csv(f"outputs/{d.name}/baselines/naive_jaccard_matrix.csv", quoting=csv.QUOTE_NONNUMERIC)
+    res_df.drop(columns=['indices'], axis=1).to_csv(f'outputs/{d.name}/baselines/facts_naive.csv', index=False)
+    pd.DataFrame([scores_dict]).to_csv(f'outputs/{d.name}/baselines/naive_scores.csv')
+    jaccard_matrix = print_matrix({}, {}, [[x['subpop'], x['indices']] for _, x in pd.DataFrame(g).iterrows()])
+    jaccard_matrix.to_csv(f"outputs/{d.name}/baselines/naive_jaccard_matrix.csv", quoting=csv.QUOTE_NONNUMERIC)
 
 
 if __name__ == '__main__':

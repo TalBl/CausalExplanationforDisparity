@@ -40,11 +40,11 @@ def algorithm(D: Dataset, k=K, threshold_support=THRESHOLD_SUPPORT, jaccard_thre
     # step 1 - get best subpopulation by divexplorer
     df_clean = pd.read_csv(D.clean_path)
     max_outcome = max(df_clean[D.outcome_col])
-    need_sample = len(df_clean) > 50000
+    need_sample = len(df_clean) > 500000
     if need_sample:
         length = df_clean.loc[df_clean['group1']==1].shape[0]
-        df_group1 = df_clean.loc[df_clean['group1']==1].sample(n=min(25000, length), random_state=42)
-        df_group2 = df_clean.loc[df_clean['group2']==1].sample(n=25000, random_state=42)
+        df_group1 = df_clean.loc[df_clean['group1']==1].sample(n=min(250000, length), random_state=42)
+        df_group2 = df_clean.loc[df_clean['group2']==1].sample(n=250000, random_state=42)
         df_sample = pd.concat([df_group1, df_group2])
         df_sample.to_csv(f"outputs/{D.name}/sample_data.csv", index=False)
         original_clean_path = D.clean_path
@@ -82,9 +82,9 @@ def algorithm(D: Dataset, k=K, threshold_support=THRESHOLD_SUPPORT, jaccard_thre
     print(f"step2 took {s3-s2} seconds")
     #step 3 - clustering
     try:
-        selected_df = clustering(D, k=k, jaccard_threshold=jaccard_threshold, num_clusters=num_clusters)
+        selected_df = clustering(D, k=k, jaccard_threshold=jaccard_threshold, num_clusters=num_clusters).sort_values(by="score", ascending=False)
         selected_df[['subpop', 'treatment_combo', 'ate1', 'ate2', 'score', 'cluster']].to_csv(f"outputs/{D.name}/clustering_results.csv", index=False)
-        jaccard_matrix = print_matrix(D, {}, {}, [[x['subpop'], x['indices']] for _, x in selected_df.iterrows()])
+        jaccard_matrix = print_matrix({}, {}, [[x['subpop'], x['indices']] for _, x in selected_df.iterrows()])
         jaccard_matrix.to_csv(f"outputs/{D.name}/jaccard_matrix.csv", quoting=csv.QUOTE_NONNUMERIC)
         s4 = time()
         print(f"step3 took {s4-s3} seconds")
@@ -149,6 +149,7 @@ if __name__ == "__main__":
     print(f"result for so: {r}")
     print(f"so took {e22 - e12}")
     try:
+        r = 0
         r = algorithm(D=acs)
     except Exception:
         print("fail run acs")

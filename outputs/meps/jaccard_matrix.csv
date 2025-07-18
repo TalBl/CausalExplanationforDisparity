@@ -1,3 +1,6 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:5dc79c109253cba108a724d42b8c758b18e4372bb40ee5312c7439d10bf17304
-size 5431
+"","{'Region': 'South', 'IsDiagnosedDiabetes': 0.0, 'DoesDoctorRecommendExercise': 0.0, 'MaritalStatus': 'NeverMarried'}","{'Race': 'White', 'IsDiagnosedDiabetes': 0.0, 'IsDiagnosedAsthma': 0.0, 'MaritalStatus': 'NeverMarried', 'Age': '<30.00'}","{'MaritalStatus': 'NeverMarried', 'DoesDoctorRecommendExercise': 0.0, 'IsBornInUSA': 1.0}","{'IsDiagnosedAsthma': 0.0, 'Race': 'White', 'MaritalStatus': 'NeverMarried', 'DoesDoctorRecommendExercise': 0.0}","{'Age': '30.00-42.00', 'IsDiagnosedDiabetes': 0.0}"
+"{'Region': 'South', 'IsDiagnosedDiabetes': 0.0, 'DoesDoctorRecommendExercise': 0.0, 'MaritalStatus': 'NeverMarried'}",1.0,0.1523,0.3197,0.2265,0.0604
+"{'Race': 'White', 'IsDiagnosedDiabetes': 0.0, 'IsDiagnosedAsthma': 0.0, 'MaritalStatus': 'NeverMarried', 'Age': '<30.00'}",0.1523,1.0,0.3011,0.5148,0.0
+"{'MaritalStatus': 'NeverMarried', 'DoesDoctorRecommendExercise': 0.0, 'IsBornInUSA': 1.0}",0.3197,0.3011,1.0,0.4874,0.0898
+"{'IsDiagnosedAsthma': 0.0, 'Race': 'White', 'MaritalStatus': 'NeverMarried', 'DoesDoctorRecommendExercise': 0.0}",0.2265,0.5148,0.4874,1.0,0.0662
+"{'Age': '30.00-42.00', 'IsDiagnosedDiabetes': 0.0}",0.0604,0.0,0.0898,0.0662,1.0

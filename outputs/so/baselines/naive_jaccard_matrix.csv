@@ -1,3 +1,6 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:8a7298feb1e3ebbe57804d827f606f148b2faa9227555cb476e46fadb9322905
-size 1563
+"","{'RaceEthnicity_WhiteorofEuropeandescent': 1.0, 'Age': '25 - 34 years old'}","{'EducationParents': 'Secondary school (e.g. American high school, German Realschule or Gymnasium, etc.)', 'SexualOrientation': 'Straight or heterosexual'}","{'EducationParents': 'Bachelor’s degree (BA, BS, B.Eng., etc.)', 'Age': '25 - 34 years old', 'Gender': 'Male'}","{'Age': '18 - 24 years old', 'Gender': 'Male', 'RaceEthnicity_WhiteorofEuropeandescent': 1.0}","{'RaceEthnicity_WhiteorofEuropeandescent': 1.0}"
+"{'RaceEthnicity_WhiteorofEuropeandescent': 1.0, 'Age': '25 - 34 years old'}",1.0,0.1268,0.2181,0.0,0.5156
+"{'EducationParents': 'Secondary school (e.g. American high school, German Realschule or Gymnasium, etc.)', 'SexualOrientation': 'Straight or heterosexual'}",0.1268,1.0,0.0,0.0766,0.1566
+"{'EducationParents': 'Bachelor’s degree (BA, BS, B.Eng., etc.)', 'Age': '25 - 34 years old', 'Gender': 'Male'}",0.2181,0.0,1.0,0.0,0.1193
+"{'Age': '18 - 24 years old', 'Gender': 'Male', 'RaceEthnicity_WhiteorofEuropeandescent': 1.0}",0.0,0.0766,0.0,1.0,0.1633
+"{'RaceEthnicity_WhiteorofEuropeandescent': 1.0}",0.5156,0.1566,0.1193,0.1633,1.0

@@ -1,3 +1,6 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:31652ada65ca0ce4818d7449f6cdc73145c007d0f41d53d90ae3fb19204412c4
-size 1426
+subpop,treatment_combo,ate1,p-value1,ate2,p-value2,score
+"{'RaceEthnicity_WhiteorofEuropeandescent': 1.0, 'Age': '25 - 34 years old'}","(('YearsCodingProf', '3-5 years'), ('HoursComputer', 'Over 12 hours'))",93826.33616504882,0.0294295666106022,-25951.412108412027,0.0389265299325599,0.0598888741367304
+"{'EducationParents': 'Secondary school (e.g. American high school, German Realschule or Gymnasium, etc.)', 'SexualOrientation': 'Straight or heterosexual'}","(('Student', 'No'), ('HopeFiveYears', 'Working as an engineering manager or other functional manager'))",176698.65912282906,0.043237328930522,53814.71856380686,0.0465622849360882,0.0614419702795111
+"{'EducationParents': 'Bachelor’s degree (BA, BS, B.Eng., etc.)', 'Age': '25 - 34 years old', 'Gender': 'Male'}","(('CompanySize', '100 to 499 employees'),)",70069.95566956665,0.0207142181441068,19807.86966400848,0.019104138397112,0.025131043002779
+"{'Age': '18 - 24 years old', 'Gender': 'Male', 'RaceEthnicity_WhiteorofEuropeandescent': 1.0}","(('Hobby', 'Yes'), ('UndergradMajor', 'Computer science, computer engineering, or software engineering'))",219469.48161837232,0.0385230493145877,55233.58685583737,0.0062444914867975,0.0821179473812674
+{'RaceEthnicity_WhiteorofEuropeandescent': 1.0},"(('YearsCodingProf', '3-5 years'), ('HoursComputer', 'Over 12 hours'))",63311.97052807911,0.037834597332307,-23068.10251402836,0.0176228531856327,0.0431900365210537

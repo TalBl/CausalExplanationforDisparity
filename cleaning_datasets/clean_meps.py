@@ -136,6 +136,13 @@ def build_mini_df():
                     df[column] = pd.cut(
                         df[column], bins=percentiles, labels=bin_labels, include_lowest=True
                     )
+    df = df[['group1', 'group2',
+             'MaritalStatus', 'Region', 'Race', 'Age', 'IsDiagnosedDiabetes',
+             'IsDiagnosedAsthma', 'IsBornInUSA', 'DoesDoctorRecommendExercise',
+             'Exercise', 'CurrentlySmoke', 'HoldHealthInsurance', 'Student', 'IsWorking',
+             'LongSinceLastFluVaccination', 'WearsSeatBelt', 'TakesAspirinFrequently',
+             'FeltNervous'
+             ]]
     return df
 
 
@@ -170,3 +177,6 @@ def filter_facts(avg1, avg2):
 
 # d = build_mini_df()
 # d.to_csv("outputs/meps/clean_data.csv", index=False)
+
+
+
